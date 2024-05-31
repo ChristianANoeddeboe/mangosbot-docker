@@ -7,7 +7,7 @@
 ####################################################################################################
 
 # need to be changed on each official DB/CORE release
-FULLDB_FILE_ZIP="ClassicDB_1_12_z2793.sql.gz"
+FULLDB_FILE_ZIP="ClassicDB_1_12_1_z2815.sql.gz"
 FULLDB_FILE=${FULLDB_FILE_ZIP%.gz}
 NEXT_MILESTONES="0.19 0.20"
 
@@ -1528,48 +1528,13 @@ function apply_playerbots_db
     return
   fi
 
-  echo "> Trying to apply playerbots db sql..."
-  if ! execute_sql_file "$PLAYERBOTS_DB_NAME" "${CORE_PATH}/src/modules/Bots/sql/playerbot/playerbot.sql"; then
-    echo "FAILED!"
-    echo ">>> $ERRORS"
-    false
-    return
-  fi
-
-  echo "> Trying to apply playerbots help texts..."
-  if ! execute_sql_file "$PLAYERBOTS_DB_NAME" "${CORE_PATH}/src/modules/Bots/sql/playerbot/ai_playerbot_help_texts.sql"; then
-    echo "FAILED!"
-    echo ">>> $ERRORS"
-    false
-    return
-  fi
-
   echo "> Trying to apply playerbots expansion specific files..."
-  BOT_EXP_PREFIX="vanilla";
+  BOT_EXP_PREFIX="classic";
   if [ "$EXPANSION" = "TBC" ]; then
     BOT_EXP_PREFIX="tbc";
   fi
   if [ "$EXPANSION" = "WoTLK" ]; then
     BOT_EXP_PREFIX="wotlk";
-  fi
-
-  if ! execute_sql_file "$PLAYERBOTS_DB_NAME" "${CORE_PATH}/src/modules/Bots/sql/playerbot/ai_playerbot_weightscales_${BOT_EXP_PREFIX}.sql"; then
-    echo "FAILED!"
-    echo ">>> $ERRORS"
-    false
-    return
-  fi
-  if ! execute_sql_file "$PLAYERBOTS_DB_NAME" "${CORE_PATH}/src/modules/Bots/sql/playerbot/nodes_${BOT_EXP_PREFIX}.sql"; then
-    echo "FAILED!"
-    echo ">>> $ERRORS"
-    false
-    return
-  fi
-  if ! execute_sql_file "$PLAYERBOTS_DB_NAME" "${CORE_PATH}/src/modules/Bots/sql/playerbot/zone_level_${BOT_EXP_PREFIX}.sql"; then
-    echo "FAILED!"
-    echo ">>> $ERRORS"
-    false
-    return
   fi
 
   echo "> Trying to apply playerbots sql mods for world db..."
@@ -1594,27 +1559,13 @@ function apply_playerbots_db
     fi
   done
   
-  echo "> Trying to apply custom playerbots sql mods for characters db..."
-  for UPDATEFILE in ${CORE_PATH}/src/modules/Bots/sql/custom/characters/*.sql; do
-    if [ -e "$UPDATEFILE" ]; then
-      local fName=$(basename "$UPDATEFILE")
-      if ! execute_sql_file "$CHAR_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
-        false
-        return
-      fi
-    fi
-  done
-  
-  echo "> Trying to apply custom playerbots sql mods for world db..."
-  for UPDATEFILE in ${CORE_PATH}/src/modules/Bots/sql/custom/mangos/*.sql; do
-    if [ -e "$UPDATEFILE" ]; then
-      local fName=$(basename "$UPDATEFILE")
-      if ! execute_sql_file "$WORLD_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
-        false
-        return
-      fi
-    fi
-  done
+  # echo "> Trying to apply sql merge file..."
+  # if ! execute_sql_file "$PLAYERBOTS_DB_NAME" "${CORE_PATH}/src/modules/Bots/sql/other/database_merge_${BOT_EXP_PREFIX}.sql"; then
+  #   echo "FAILED!"
+  #   echo ">>> $ERRORS"
+  #   false
+  #   return
+  # fi
 
   echo
   true

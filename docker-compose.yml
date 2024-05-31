@@ -1,97 +1,93 @@
-version: "3.5"
-
 volumes:
-    db:
-    mangosd_etc:
-    realmd_etc:
+  db:
+  mangosd_etc:
+  realmd_etc:
 
 services:
-    db:
-        image: linuxserver/mariadb
-        container_name: mangosbot-db
-        environment:
-            - PUID=1028
-            - PGID=65537
-            - TZ=Europe/London
-            - MYSQL_ROOT_PASSWORD=mangos
-        volumes:
-            - "./db:/config"
-        networks:
-            - mangosbot-network
-        ports:
-            - "33307:3306"
-        restart: unless-stopped
+  db:
+    image: linuxserver/mariadb
+    container_name: mangosbot-db
+    environment:
+      PUID: 1028
+      PGID: 65537
+      TZ: Europe/London
+      MYSQL_ROOT_PASSWORD: mangos
+    volumes:
+      - "./db:/config"
+    networks:
+      - mangosbot-network
+    ports:
+      - 33307:3306
+    restart: unless-stopped
         
-    mangosd:
-        build:
-            context: .
-            dockerfile: ./mangosd/Dockerfile
-        image: mangosbot-mangosd
-        container_name: mangosbot-mangosd
-        networks:
-            - mangosbot-network
-        ports:
-            - "38085:38085"
-            - "3443:3443" # Remote Console
-            #- 7878:7878 # Enable if you want to use SOAP   
-        volumes:
-            - "./config:/opt/cmangos/etc"
-            - "./logs:/opt/cmangos/logs"
-            - "./data:/opt/cmangos/data"
-            - "./scripts:/opt/cmangos/scripts"
-            - "./backup:/opt/cmangos/backup"
-            - "./sql:/opt/cmangos/sql"
-            - "./bin:/opt/cmangos/bin"
-            - "/etc/localtime:/etc/localtime:ro"
-        restart: "unless-stopped"
-        stop_grace_period: 30m # The amount of seconds to wait before killing the container forcefully (if the server has a lot of bots is recommended to increase this)
-        environment:
-            - PUID=1028
-            - PGID=65537
-            - TZ=Europe/London
-            - CHARACTERS_DB=classiccharacters
-            - MANGOSD_DB=classicmangos
-            - REALMD_DB=classicrealmd
-            - PLAYERBOTS_DB=classicplayerbots
-            - DB_SERVER=mangosbot-db
-            - DB_ROOT_USER=root
-            - DB_ROOT_PASS=mangos
-            - DB_PORT=3306
-            - DB_USER=mangos
-            - DB_PASS=mangos
-        security_opt:
-          - seccomp:unconfined
-        cap_add:
-          - SYS_PTRACE
+  mangosd:
+    build:
+      context: .
+      dockerfile: ./mangosd/Dockerfile
+    container_name: mangosbot-mangosd
+    networks:
+      - mangosbot-network
+    ports:
+      - 38085:38085
+      - 3443:3443 # Remote Console
+      # - 7878:7878 # Enable if you want to use SOAP   
+    volumes:
+      - "./config:/opt/cmangos/etc"
+      - "./logs:/opt/cmangos/logs"
+      - "./data:/opt/cmangos/data"
+      - "./scripts:/opt/cmangos/scripts"
+      - "./backup:/opt/cmangos/backup"
+      - "./sql:/opt/cmangos/sql"
+      - "./bin:/opt/cmangos/bin"
+      - "/etc/localtime:/etc/localtime:ro"
+    restart: unless-stopped
+    stop_grace_period: 30m # The amount of seconds to wait before killing the container forcefully (if the server has a lot of bots is recommended to increase this)
+    environment:
+      PUID: 1028
+      PGID: 65537
+      TZ: Europe/London
+      CHARACTERS_DB: classiccharacters
+      MANGOSD_DB: classicmangos
+      REALMD_DB: classicrealmd
+      PLAYERBOTS_DB: classicplayerbots
+      DB_SERVER: mangosbot-db
+      DB_ROOT_USER: root
+      DB_ROOT_PASS: mangos
+      DB_PORT: 3306
+      DB_USER: mangos
+      DB_PASS: mangos
+    security_opt:
+      - seccomp:unconfined
+    cap_add:
+      - SYS_PTRACE
 
-    realmd:
-        build:
-            context: .
-            dockerfile: ./realmd/Dockerfile
-        image: mangosbot-realmd
-        container_name: mangosbot-realmd
-        networks:
-            - mangosbot-network
-        ports:
-            - "3724:3724"
-        volumes:
-            - "./config:/opt/cmangos/etc"
-            - "./logs:/opt/cmangos/logs"
-            - "./bin:/opt/cmangos/bin"
-            - "./scripts:/opt/cmangos/scripts"
-            - "/etc/localtime:/etc/localtime:ro"
-        restart: "unless-stopped"
-        environment:
-            - PUID=1028
-            - PGID=65537
-            - TZ=Europe/London
-            - REALMD_DB=classicrealmd
-            - DB_USER=mangos
-            - DB_PASS=mangos
-            - DB_SERVER=mangosbot-db
-            - DB_PORT=3306
+  realmd:
+    build:
+      context: .
+      dockerfile: ./realmd/Dockerfile
+    container_name: mangosbot-realmd
+    networks:
+      - mangosbot-network
+    ports:
+      - 3724:3724
+    volumes:
+      - "./config:/opt/cmangos/etc"
+      - "./logs:/opt/cmangos/logs"
+      - "./bin:/opt/cmangos/bin"
+      - "./scripts:/opt/cmangos/scripts"
+      - "/etc/localtime:/etc/localtime:ro"
+    restart: unless-stopped
+    environment:
+      PUID: 1028
+      PGID: 65537
+      TZ: Europe/London
+      REALMD_DB: classicrealmd
+      DB_USER: mangos
+      DB_PASS: mangos
+      DB_SERVER: mangosbot-db
+      DB_PORT: 3306
 
 networks:
-    mangosbot-network:
-        name: mangosbot-network
-        driver: bridge
+  mangosbot-network:
+    name: mangosbot-network
+    driver: bridge
