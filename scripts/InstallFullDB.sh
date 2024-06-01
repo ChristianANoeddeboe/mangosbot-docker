@@ -14,7 +14,7 @@ NEXT_MILESTONES="0.19 0.20"
 # specific to this core
 EXPANSION="Classic" #warning only 'Classic' or 'TBC' or 'WoTLK' else acid filename will be wrong
 DATABASE_UPDATE_FILE_PREFIX="z"
-EXPANSION_LC="$(tr [A-Z] [a-z] <<< "$EXPANSION")"
+EXPANSION_LC="$(tr [A-Z] [a-z] <<<"$EXPANSION")"
 
 # internal use
 SOURCE_CONTENT_RELEASE_VERSION=""
@@ -97,8 +97,7 @@ DEFAULT_CORE_FOLDER="$EXPANSION_LC"
 LAST_BACKUP_ADR="https://github.com/cmangos/${EXPANSION_LC}-db/releases/download/latest/${EXPANSION_LC}-all-backups.tar.gz"
 
 # extract db tittle, db content version, and last content update revision from content db
-function initialize()
-{
+function initialize() {
   if [ ! -f "${ADDITIONAL_PATH}Full_DB/$FULLDB_FILE_ZIP" ]; then
     echo "Unable to locate full db file ${ADDITIONAL_PATH}Full_DB/$FULLDB_FILE_ZIP"
     false
@@ -107,7 +106,7 @@ function initialize()
 
   local foundGZPath=$(type -P "gzip") # 2> /dev/null)
 
-  if [[ "$foundGZPath" = "" ]];  then
+  if [[ "$foundGZPath" = "" ]]; then
     echo "Unable to find gzip binaries on your system!"
     echo "GZIP 1.6 or greater should be installed"
     echo "Aborting..."
@@ -139,7 +138,7 @@ function initialize()
   local contentDBVer=""
   local contentDBTittle=""
   #echo "${grepResult[*]}"
-  for line in ${grepResult[@]};do
+  for line in ${grepResult[@]}; do
     local currLine=$(echo "$line" | tr -d '\\')
     if [[ $currLine =~ $coreVerRegex ]]; then
       coreDBVer=${BASH_REMATCH[1]}
@@ -183,7 +182,7 @@ function initialize()
 
   local versRegex="0*([0-9]+)"
   IFS=$'\n'
-  while IFS= read -r file;do
+  while IFS= read -r file; do
     local cVers=""
     if [ -f "$file" ]; then
       cVers=$(basename "$file" ".sql")
@@ -203,8 +202,7 @@ function initialize()
 }
 
 ## All SQLs used in this script
-function set_sql_queries
-{
+function set_sql_queries {
   # create databases
   SQL_CREATE_WORLD_DB="CREATE DATABASE \`$WORLD_DB_NAME\` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;"
   SQL_CREATE_CHAR_DB="CREATE DATABASE \`$CHAR_DB_NAME\` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;"
@@ -245,8 +243,7 @@ function set_sql_queries
 }
 
 # save current setting to $CONFIG_FILE
-function save_settings()
-{
+function save_settings() {
   local allsettings=()
   allsettings=("####################################################################################################")
   allsettings+=("# This is the config file for the '$SCRIPT_FILE' script")
@@ -317,20 +314,19 @@ function save_settings()
   # save to file
   for j in "${allsettings[@]}"; do
     echo $j
-  done > $CONFIG_FILE
+  done >$CONFIG_FILE
 }
 
 # Give chance to break the script
-function force_wait()
-{
+function force_wait() {
   if [ "$FORCE_WAIT" != "NO" ]; then
     echo "WARNING: all you previous data will be discarded!"
     echo "Press CTRL+C to exit"
     # show counter
     for i in {9..0}; do
-    echo -ne "$i"
-    echo -ne "\033[0K\r"
-    sleep 1
+      echo -ne "$i"
+      echo -ne "\033[0K\r"
+      sleep 1
     done
     echo
   fi
@@ -338,8 +334,7 @@ function force_wait()
 
 # some basic check to see if argument $1 is a cmangos core folder
 # return false and error message in ERRORS varible or true
-function check_core_folders()
-{
+function check_core_folders() {
   ERRORS=""
   if [[ "$1" = "" ]]; then
     ERRORS="CORE_PATH is not set. Please try (8) to autodetect it or manually edit $CONFIG_FILE"
@@ -378,8 +373,7 @@ function check_core_folders()
 # will not search in root folder to avoid too much time for find
 # also limit search to 5 subfolder to not go too deep
 # if it fail CORE_PATH will remain empty
-function try_set_core_path()
-{
+function try_set_core_path() {
   currentFolder=$(pwd)
 
   if [[ "$CORE_PATH" != "" ]]; then
@@ -390,8 +384,7 @@ function try_set_core_path()
   IFS=$'\n'
   #avoid searchinig in entire root
   while [[ "$currentFolder" != "/" ]]; do
-    for foundfolder in $(find "$currentFolder" -mindepth 1 -maxdepth 5 -iname "*$DEFAULT_CORE_FOLDER*" -type d 2> /dev/null)
-    do
+    for foundfolder in $(find "$currentFolder" -mindepth 1 -maxdepth 5 -iname "*$DEFAULT_CORE_FOLDER*" -type d 2>/dev/null); do
       if [[ "$foundfolder" != "" ]]; then
         if check_core_folders "$foundfolder"; then
           CORE_PATH="${foundfolder}"
@@ -411,35 +404,30 @@ function try_set_core_path()
 }
 
 # try to set MYSQL_PATH
-function try_set_mysql_path()
-{
-  if [[ $MYSQL_PATH != "" ]]
-  then
+function try_set_mysql_path() {
+  if [[ $MYSQL_PATH != "" ]]; then
     true
     return
   fi
 
-  local foundMysqlPath=$(type -P "mysql" 2> /dev/null)
-  if [ foundMysqlPath != "" ]
-  then
+  local foundMysqlPath=$(type -P "mysql" 2>/dev/null)
+  if [ foundMysqlPath != "" ]; then
     MYSQL_PATH="$foundMysqlPath"
   else
-      local defaultMysqlFolders="program files"
-      IFS=$'\n'
-      #avoid searchinig in entire root
-      for foundfolder in $(find "/c" -mindepth 1 -maxdepth 1 -iname "$defaultMysqlFolders*" -type d 2> /dev/null)
-      do
-        if [[ "$foundfolder" != "" ]]; then
-          for foundFile in $(find "$foundfolder/MySQL" -mindepth 1 -maxdepth 3 -iname "mysql.exe" -type f 2> /dev/null)
-          do
-            if [[ "$foundFile" != "" ]]; then
-              MYSQL_PATH="${foundFile}"
-              break
-            fi
-          done
-        fi
-      done
-      IFS="$OLDIFS"
+    local defaultMysqlFolders="program files"
+    IFS=$'\n'
+    #avoid searchinig in entire root
+    for foundfolder in $(find "/c" -mindepth 1 -maxdepth 1 -iname "$defaultMysqlFolders*" -type d 2>/dev/null); do
+      if [[ "$foundfolder" != "" ]]; then
+        for foundFile in $(find "$foundfolder/MySQL" -mindepth 1 -maxdepth 3 -iname "mysql.exe" -type f 2>/dev/null); do
+          if [[ "$foundFile" != "" ]]; then
+            MYSQL_PATH="${foundFile}"
+            break
+          fi
+        done
+      fi
+    done
+    IFS="$OLDIFS"
   fi
 
   if [[ $MYSQL_PATH != "" ]]; then
@@ -453,26 +441,22 @@ function try_set_mysql_path()
 
 # print string and add underline to it.
 # (arg1 is string to print and arg2 is the char to use to for underline)
-print_underline()
-{
+print_underline() {
   echo $1
   echo "${1//?/${2:--}}"
 }
 
-function print_header()
-{
+function print_header() {
   clear
   print_underline "Welcome to the CMaNGOS $EXPANSION databases manager" "="
   echo
 }
 
 # try connect to db
-function try_connect_to_db()
-{
+function try_connect_to_db() {
   export MYSQL_PWD="$MYSQL_PASSWORD"
   ERRORS=$("$MYSQL_PATH" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u$MYSQL_USERNAME --connect-timeout=2 -s -e';' 2>&1)
-  if [[ $? != 0 ]]
-  then
+  if [[ $? != 0 ]]; then
     STATUS_USER_SUCCESS=false
     false
     return
@@ -485,8 +469,7 @@ function try_connect_to_db()
 # return true if success or already set
 # arg 1 type bool disable any output if false
 # arg 2 type bool force to set new root access if already set
-function set_try_root_connect_to_db
-{
+function set_try_root_connect_to_db {
   local showstatus=${1:true}
   local forceset=${2:false}
   if [ "$STATUS_ROOT_SUCCESS" = true ]; then
@@ -499,15 +482,14 @@ function set_try_root_connect_to_db
       clear
       print_underline "Root access required to continue" "="
       echo
-      read -e -p    "Enter MySQL root user...........: " ROOTUSERNAME
+      read -e -p "Enter MySQL root user...........: " ROOTUSERNAME
       read -e -s -p "Enter MySQL root password.......: " ROOTPASSWORD
       echo "**********"
       echo -n "Checking mysql database accessibility with root access..."
     fi
     export MYSQL_PWD="$ROOTPASSWORD"
     ERRORS=$("$MYSQL_PATH" -u"$ROOTUSERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" --connect-timeout=3 -s -N -e";" 2>&1)
-    if [[ $? != 0 ]]
-    then
+    if [[ $? != 0 ]]; then
       if [ "$showstatus" = true ]; then echo "FAILED!"; fi
       echo ">>> $ERRORS"
       STATUS_ROOT_SUCCESS=false
@@ -519,7 +501,7 @@ function set_try_root_connect_to_db
       return
     else
       if [ "$showstatus" = true ]; then echo "SUCCESS"; fi
-      break;
+      break
     fi
   done
   export MYSQL_PWD="$MYSQL_PASSWORD"
@@ -528,19 +510,18 @@ function set_try_root_connect_to_db
 }
 
 # Check mysql binary
-function check_mysql_binary()
-{
+function check_mysql_binary() {
   ERRORS=""
   local foundMysqlPath=""
   if [[ "$MYSQL_PATH" != "" ]]; then
-    foundMysqlPath=$(type -P "$MYSQL_PATH" 2> /dev/null)
+    foundMysqlPath=$(type -P "$MYSQL_PATH" 2>/dev/null)
   else
     ERRORS="MYSQL_PATH is not set! Please try (7) to autodetect it or manually edit $CONFIG_FILE"
     false
     return
   fi
 
-  if [[ "$foundMysqlPath" = "" ]];  then
+  if [[ "$foundMysqlPath" = "" ]]; then
     ERRORS="Unable to find mysql binaries using '$MYSQL_PATH'"
     false
     return
@@ -549,8 +530,7 @@ function check_mysql_binary()
 }
 
 # Check core folder
-function check_core_path_setting()
-{
+function check_core_path_setting() {
   ERRORS=""
   # check_core_folders will fill ERRORS if any
   if ! check_core_folders "${CORE_PATH}"; then
@@ -561,8 +541,7 @@ function check_core_path_setting()
 }
 
 # Check pre requisite
-function check_minimum_requierements()
-{
+function check_minimum_requierements() {
   local current_errors=()
 
   if ! check_core_path_setting; then
@@ -574,7 +553,7 @@ function check_minimum_requierements()
   else
     if ! try_connect_to_db; then
       local normal_connection_error="$ERRORS"
-      if [[ "$STATUS_ROOT_SUCCESS" = false ]] ; then
+      if [[ "$STATUS_ROOT_SUCCESS" = false ]]; then
         current_errors+=("$normal_connection_error")
       fi
     fi
@@ -592,15 +571,14 @@ function check_minimum_requierements()
 
 # execute sql command and print error if any
 # execute_sql_command "database" "sql" "message"(if empty no message is shown) return true if success
-function execute_sql_command()
-{
+function execute_sql_command() {
   if [ ! -z "$3" ]; then echo -n "$3 ... "; fi
   export MYSQL_PWD="$MYSQL_PASSWORD"
   MYSQL_ERROR=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -s -N -D "$1" -e"$2" 2>&1)
   if [[ $? != 0 ]]; then
     if [ ! -z "$3" ]; then
       echo "FAILED!"
-      echo ">>> $MYSQL_ERROR";
+      echo ">>> $MYSQL_ERROR"
     fi
     false
     return
@@ -612,17 +590,16 @@ function execute_sql_command()
 
 # execute file that contain sql and print error if any message is provided
 # execute_sql_file "database" "filename" "message"(if empty no message is shown) return true if success else MYSQL_ERROR contain the error
-function execute_sql_file()
-{
+function execute_sql_file() {
   local showstatus=true
   if [[ "$3" = "" ]]; then showstatus=false; fi
   if [[ "$showstatus" = true ]]; then echo -n "$3 ... "; fi
   export MYSQL_PWD="$MYSQL_PASSWORD"
-  ERRORS=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -s -N -D "$1" < "$2" 2>&1)
+  ERRORS=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -s -N -D "$1" <"$2" 2>&1)
   if [[ $? != 0 ]]; then
     if [[ "$showstatus" = true ]]; then
       echo "FAILED!"
-      echo ">>> $ERRORS";
+      echo ">>> $ERRORS"
     fi
     false
     return
@@ -632,8 +609,7 @@ function execute_sql_file()
   true
 }
 
-function show_db_name()
-{
+function show_db_name() {
   echo -e "World database name.....: $WORLD_DB_NAME"
   echo -e "Character database name.: $CHAR_DB_NAME"
   echo -e "Realm database name.....: $REALM_DB_NAME"
@@ -641,8 +617,7 @@ function show_db_name()
   echo -e "Playerbots database name: $PLAYERBOTS_DB_NAME"
 }
 
-function show_mysql_settings()
-{
+function show_mysql_settings() {
   echo -e "Database host...........: $MYSQL_HOST"
   echo -e "Database port...........: $MYSQL_PORT"
   echo -e "MySQL user..............: $MYSQL_USERNAME (password is defined in $CONFIG_FILE)"
@@ -658,31 +633,29 @@ function show_mysql_settings()
 }
 
 # arg1 = arg2 (if arg2 is empty then arg1 = arg3, if arg3 is empty do nothing)
-function assign_new_value()
-{
+function assign_new_value() {
   local v="$1"
   if [[ "$2" != "" ]]; then
-      eval "$v='${2}'"
+    eval "$v='${2}'"
   else
-      if [[ "$3" != "" ]]; then
-        eval "$v='${3}'"
-      fi
+    if [[ "$3" != "" ]]; then
+      eval "$v='${3}'"
+    fi
   fi
 }
 
-function change_db_name()
-{
-  local nameSettings=( "$WORLD_DB_NAME" "$CHAR_DB_NAME" "$REALM_DB_NAME" "$LOGS_DB_NAME" )
+function change_db_name() {
+  local nameSettings=("$WORLD_DB_NAME" "$CHAR_DB_NAME" "$REALM_DB_NAME" "$LOGS_DB_NAME")
   if [[ $BASH_VERSION > 4 ]]; then
-    read -e -p    "Enter world database name.......: " -i $WORLD_DB_NAME WORLD_DB_NAME
-    read -e -p    "Enter characters database name..: " -i $CHAR_DB_NAME CHAR_DB_NAME
-    read -e -p    "Enter realm database name.......: " -i $REALM_DB_NAME REALM_DB_NAME
-    read -e -p    "Enter log database name.........: " -i $LOGS_DB_NAME LOGS_DB_NAME
+    read -e -p "Enter world database name.......: " -i $WORLD_DB_NAME WORLD_DB_NAME
+    read -e -p "Enter characters database name..: " -i $CHAR_DB_NAME CHAR_DB_NAME
+    read -e -p "Enter realm database name.......: " -i $REALM_DB_NAME REALM_DB_NAME
+    read -e -p "Enter log database name.........: " -i $LOGS_DB_NAME LOGS_DB_NAME
   else
-    read -e -p    "Enter world database name......current($WORLD_DB_NAME).: " wname
-    read -e -p    "Enter characters database name.current($CHAR_DB_NAME).: "  cname
-    read -e -p    "Enter realm database name......current($REALM_DB_NAME).: " rname
-    read -e -p    "Enter log database name........current($LOGS_DB_NAME).: "  lname
+    read -e -p "Enter world database name......current($WORLD_DB_NAME).: " wname
+    read -e -p "Enter characters database name.current($CHAR_DB_NAME).: " cname
+    read -e -p "Enter realm database name......current($REALM_DB_NAME).: " rname
+    read -e -p "Enter log database name........current($LOGS_DB_NAME).: " lname
 
     assign_new_value 'WORLD_DB_NAME' "${wname}"
     assign_new_value 'CHAR_DB_NAME' "${cname}"
@@ -691,41 +664,40 @@ function change_db_name()
   fi
 }
 
-function change_mysql_settings()
-{
+function change_mysql_settings() {
   print_header
   if [[ $BASH_VERSION > 4 ]]; then
-    read -e -p    "Enter MySQL host................: " -i $MYSQL_HOST MYSQL_HOST
-    read -e -p    "Enter MySQL port................: " -i $MYSQL_PORT MYSQL_PORT
-    read -e -p    "Enter MySQL user................: " -i $MYSQL_USERNAME MYSQL_USERNAME
+    read -e -p "Enter MySQL host................: " -i $MYSQL_HOST MYSQL_HOST
+    read -e -p "Enter MySQL port................: " -i $MYSQL_PORT MYSQL_PORT
+    read -e -p "Enter MySQL user................: " -i $MYSQL_USERNAME MYSQL_USERNAME
     read -e -s -p "Enter MySQL password............: " MYSQL_PASSWORD
     echo "***********"
-    read -e -p    "MySQL user IP access............: " -i $MYSQL_USERIP MYSQL_USERIP
-    read -e -p    "Enter MySQL binary path.........: " -i "$MYSQL_PATH" MYSQL_PATH
-    read -e -p    "Enter MySQL dump binary path....: " -i "$MYSQL_DUMP_PATH" MYSQL_DUMP_PATH
-    read -e -p    "Enter core path.................: " -i "$CORE_PATH" CORE_PATH
+    read -e -p "MySQL user IP access............: " -i $MYSQL_USERIP MYSQL_USERIP
+    read -e -p "Enter MySQL binary path.........: " -i "$MYSQL_PATH" MYSQL_PATH
+    read -e -p "Enter MySQL dump binary path....: " -i "$MYSQL_DUMP_PATH" MYSQL_DUMP_PATH
+    read -e -p "Enter core path.................: " -i "$CORE_PATH" CORE_PATH
     change_db_name
     echo -e "Choose YES or NO for following options"
-    read -e -p    "LOCALE(default:NO)..............: " -i "$LOCALES" LOCALES
-    read -e -p    "DEV_UPDATES(default:NO).........: " -i "$DEV_UPDATES" DEV_UPDATES
-    read -e -p    "AHBOT(default:NO)...............: " -i "$AHBOT" AHBOT
-    read -e -p    "BOTS_DB(default:YES)............: " -i "$BOTS_DB" BOTS_DB
+    read -e -p "LOCALE(default:NO)..............: " -i "$LOCALES" LOCALES
+    read -e -p "DEV_UPDATES(default:NO).........: " -i "$DEV_UPDATES" DEV_UPDATES
+    read -e -p "AHBOT(default:NO)...............: " -i "$AHBOT" AHBOT
+    read -e -p "BOTS_DB(default:YES)............: " -i "$BOTS_DB" BOTS_DB
   else
-    read -e -p    "Enter MySQL host...............current($MYSQL_HOST).: " mhost
-    read -e -p    "Enter MySQL port...............current($MYSQL_PORT).: " mport
-    read -e -p    "Enter MySQL user...............current($MYSQL_USERNAME).: " muser
+    read -e -p "Enter MySQL host...............current($MYSQL_HOST).: " mhost
+    read -e -p "Enter MySQL port...............current($MYSQL_PORT).: " mport
+    read -e -p "Enter MySQL user...............current($MYSQL_USERNAME).: " muser
     read -e -s -p "Enter MySQL password............: " mpass
     echo "***********"
-    read -e -p    "MySQL user IP access...........current($MYSQL_USERIP).: " musip
-    read -e -p    "Enter MySQL binary path........current($MYSQL_PATH).: " mpath
-    read -e -p    "Enter MySQL dump binary path...current($MYSQL_DUMP_PATH).: " mdpath
-    read -e -p    "Enter core path................current($CORE_PATH).: " cpath
+    read -e -p "MySQL user IP access...........current($MYSQL_USERIP).: " musip
+    read -e -p "Enter MySQL binary path........current($MYSQL_PATH).: " mpath
+    read -e -p "Enter MySQL dump binary path...current($MYSQL_DUMP_PATH).: " mdpath
+    read -e -p "Enter core path................current($CORE_PATH).: " cpath
     change_db_name
     echo -e "Choose YES or NO for following options"
-    read -e -p    "LOCALE(default:NO).............current($LOCALES).: " loc
-    read -e -p    "DEV_UPDATES(default:NO)........current($DEV_UPDATES).: " dev
-    read -e -p    "AHBOT(default:NO)..............current($AHBOT).: " ahb
-    read -e -p    "BOTS_DB(default:YES)...........current($BOTS_DB).: " bot
+    read -e -p "LOCALE(default:NO).............current($LOCALES).: " loc
+    read -e -p "DEV_UPDATES(default:NO)........current($DEV_UPDATES).: " dev
+    read -e -p "AHBOT(default:NO)..............current($AHBOT).: " ahb
+    read -e -p "BOTS_DB(default:YES)...........current($BOTS_DB).: " bot
 
     assign_new_value 'MYSQL_HOST' "${mhost}"
     assign_new_value 'MYSQL_PORT' "${mport}"
@@ -752,21 +724,19 @@ function change_mysql_settings()
   if [[ "$REALM_DB_NAME" = "" ]]; then REALM_DB_NAME="${REALM_DB_NAME_DEFAULT}"; fi
   if [[ "$LOGS_DB_NAME" = "" ]]; then LOGS_DB_NAME="${LOGS_DB_NAME_DEFAULT}"; fi
   if [[ "$PLAYERBOTS_DB_NAME" = "" ]]; then PLAYERBOTS_DB_NAME="${PLAYERBOTS_DB_NAME_DEFAULT}"; fi
-  LOCALES="$(tr [a-z] [A-Z] <<< "$LOCALES")"
-  DEV_UPDATES="$(tr [a-z] [A-Z] <<< "$DEV_UPDATES")"
-  AHBOT="$(tr [a-z] [A-Z] <<< "$AHBOT")"
+  LOCALES="$(tr [a-z] [A-Z] <<<"$LOCALES")"
+  DEV_UPDATES="$(tr [a-z] [A-Z] <<<"$DEV_UPDATES")"
+  AHBOT="$(tr [a-z] [A-Z] <<<"$AHBOT")"
   save_settings
 }
 
-function wait_key()
-{
+function wait_key() {
   read -n1 -r -p "Press space to continue..." key
 }
 
-function print_mysql_connection_status()
-{
+function print_mysql_connection_status() {
   echo -ne "Trying to connect to DATABASE: "
-  if ! try_connect_to_db ; then
+  if ! try_connect_to_db; then
     echo "Error: unable to connect to db"
     echo "$ERRORS"
   else
@@ -778,36 +748,33 @@ function print_mysql_connection_status()
 # Get current db version
 # get_current_db_version "database name" "table name"
 # result will be in CURRENT_DB_VERSION and in CURRENT_LAST_CONTENT_DB_VERSION
-function get_current_db_version()
-{
+function get_current_db_version() {
   CURRENT_DB_VERSION=""
   CURRENT_LAST_CONTENT_DB_VERSION=""
 
   sql="SELECT COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_SCHEMA='$1' AND TABLE_NAME='$2';"
   #echo "$sql"
   IFS=$'\n'
-  while read -a row
-  do
+  while read -a row; do
     #echo "${row[0]}"
     case "${row[0]}" in
-      *required_*)
-        CURRENT_DB_VERSION=$(echo "${row[0]//[$'\n\r']}") # remove eventual carriage return
-        CURRENT_DB_VERSION=$(echo -n "${CURRENT_DB_VERSION//required_}") # remove "required_"
-        ;;
+    *required_*)
+      CURRENT_DB_VERSION=$(echo "${row[0]//[$'\n\r']/}")                # remove eventual carriage return
+      CURRENT_DB_VERSION=$(echo -n "${CURRENT_DB_VERSION//required_/}") # remove "required_"
+      ;;
 
-      content_*)
-        CURRENT_LAST_CONTENT_DB_VERSION=$(echo "${row[0]//[$'\n\r']}") # remove eventual carriage return
-        CURRENT_LAST_CONTENT_DB_VERSION=$(echo -n "${CURRENT_LAST_CONTENT_DB_VERSION//content_}") # remove "content_"
-        ;;
-     esac
+    content_*)
+      CURRENT_LAST_CONTENT_DB_VERSION=$(echo "${row[0]//[$'\n\r']/}")                            # remove eventual carriage return
+      CURRENT_LAST_CONTENT_DB_VERSION=$(echo -n "${CURRENT_LAST_CONTENT_DB_VERSION//content_/}") # remove "content_"
+      ;;
+    esac
   done < <("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -s -N -e"$sql")
   IFS="$OLDIFS"
 }
 
 # check if we can access DBs and retrieve their version
 # check_dbs_accessibility bool (if parameter is true the result is displayed)
-function check_dbs_accessibility()
-{
+function check_dbs_accessibility() {
   local showstatus=${1:false}
   local current_error
   local UNAVAILABLE_DB=()
@@ -823,14 +790,14 @@ function check_dbs_accessibility()
   STATUS_LOGS_DB_FOUND=false
   DB_CONTENT_RELEASE_VERSION=""
 
-  if ! try_connect_to_db ; then
+  if ! try_connect_to_db; then
     false
     return
   fi
 
   if [[ "$showstatus" = true ]]; then echo -ne "Checking '$WORLD_DB_NAME' db access, please wait..."; fi
   ERRORS+=($("$MYSQL_PATH" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u$MYSQL_USERNAME -D$WORLD_DB_NAME --connect-timeout=2 -s -e";" 2>&1))
-  if [[ $? != 0 ]];  then
+  if [[ $? != 0 ]]; then
     DB_WORLDDB_VERSION="0"
     UNAVAILABLE_DB+=("$WORLD_DB_NAME")
   else
@@ -855,7 +822,10 @@ function check_dbs_accessibility()
     fi
   fi
 
-  if [[ "$showstatus" = true ]]; then echo -ne "\033[0K\r"; echo -ne "Checking '$REALM_DB_NAME' db access, please wait...          "; fi
+  if [[ "$showstatus" = true ]]; then
+    echo -ne "\033[0K\r"
+    echo -ne "Checking '$REALM_DB_NAME' db access, please wait...          "
+  fi
   ERRORS+=($("$MYSQL_PATH" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u$MYSQL_USERNAME -D$REALM_DB_NAME --connect-timeout=2 -s -e";" 2>&1))
   if [[ $? != 0 ]]; then
     DB_REALMDB_VERSION="0"
@@ -867,10 +837,12 @@ function check_dbs_accessibility()
     STATUS_REALM_DB_FOUND=true
   fi
 
-  if [[ "$showstatus" = true ]]; then echo -ne "\033[0K\r"; echo -ne "Checking '$CHAR_DB_NAME' db access, please wait...          "; fi
+  if [[ "$showstatus" = true ]]; then
+    echo -ne "\033[0K\r"
+    echo -ne "Checking '$CHAR_DB_NAME' db access, please wait...          "
+  fi
   ERRORS+=($("$MYSQL_PATH" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u$MYSQL_USERNAME -D$CHAR_DB_NAME --connect-timeout=2 -s -e";" 2>&1))
-  if [[ $? != 0 ]]
-  then
+  if [[ $? != 0 ]]; then
     DB_CHARDB_VERSION="0"
     UNAVAILABLE_DB+=("$CHAR_DB_NAME")
   else
@@ -880,10 +852,12 @@ function check_dbs_accessibility()
     STATUS_CHAR_DB_FOUND=true
   fi
 
-  if [[ "$showstatus" = true ]]; then echo -ne "\033[0K\r"; echo -ne "Checking '$LOGS_DB_NAME' db access, please wait...          "; fi
+  if [[ "$showstatus" = true ]]; then
+    echo -ne "\033[0K\r"
+    echo -ne "Checking '$LOGS_DB_NAME' db access, please wait...          "
+  fi
   ERRORS+=($("$MYSQL_PATH" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u$MYSQL_USERNAME -D$LOGS_DB_NAME --connect-timeout=2 -s -e";" 2>&1))
-  if [[ $? != 0 ]]
-  then
+  if [[ $? != 0 ]]; then
     DB_LOGSDB_VERSION="0"
     UNAVAILABLE_DB+=("$LOGS_DB_NAME")
   else
@@ -893,10 +867,12 @@ function check_dbs_accessibility()
     STATUS_LOGS_DB_FOUND=true
   fi
 
-  if [[ "$showstatus" = true ]]; then echo -ne "\033[0K\r"; echo -ne "Checking '$PLAYERBOTS_DB_NAME' db access, please wait...          "; fi
+  if [[ "$showstatus" = true ]]; then
+    echo -ne "\033[0K\r"
+    echo -ne "Checking '$PLAYERBOTS_DB_NAME' db access, please wait...          "
+  fi
   ERRORS+=($("$MYSQL_PATH" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u$MYSQL_USERNAME -D$PLAYERBOTS_DB_NAME --connect-timeout=2 -s -e";" 2>&1))
-  if [[ $? != 0 ]]
-  then
+  if [[ $? != 0 ]]; then
     UNAVAILABLE_DB+=("$PLAYERBOTS_DB_NAME")
   else
     if [[ "$showstatus" = true ]]; then echo -ne "SUCCESS"; fi
@@ -909,7 +885,7 @@ function check_dbs_accessibility()
       echo -ne "                                                                    "
       echo -ne "\033[0K\r"
       echo -ne ">>> Error: Found some inaccessible DB> "
-      for mdb in "${UNAVAILABLE_DB[@]}";do
+      for mdb in "${UNAVAILABLE_DB[@]}"; do
         echo -ne "'$mdb' "
       done
       echo
@@ -938,8 +914,7 @@ function check_dbs_accessibility()
   fi
 }
 
-function show_installation_status()
-{
+function show_installation_status() {
   local db_need_update=()
   local db_need_create=()
   local pullNeeded=false
@@ -1033,8 +1008,7 @@ function show_installation_status()
   fi
 }
 
-function are_you_sure()
-{
+function are_you_sure() {
   local word=${1:yes}
   read -e -p "All previous changes will be lost. Type '$word' if you are sure : " CHANGESETTING
   if [[ "$CHANGESETTING" != $word ]]; then
@@ -1050,8 +1024,7 @@ function are_you_sure()
 ###############################################
 
 # Apply main file to db
-function apply_main_file()
-{
+function apply_main_file() {
   if ! execute_sql_file "$WORLD_DB_NAME" "${ADDITIONAL_PATH}Full_DB/$FULLDB_FILE" "  - Applying $FULLDB_FILE"; then
     false
     return
@@ -1062,35 +1035,37 @@ function apply_main_file()
 }
 
 # retrieve current revision from source file
-function get_current_source_db_version()
-{
+function get_current_source_db_version() {
   revision_file="$CORE_PATH/src/shared/revision_sql.h"
-  while IFS= read -r line
-  do
+  while IFS= read -r line; do
     case "$line" in
-      # try to read realmd db revision
-      *REVISION_DB_REALMD*)
+    # try to read realmd db revision
+    *REVISION_DB_REALMD*)
       sarray=($line)
-      SOURCE_REALMDB_VER=${sarray[2]//[$'\"\r\n']}
-      SOURCE_REALMDB_VER=${SOURCE_REALMDB_VER//required_};;
+      SOURCE_REALMDB_VER=${sarray[2]//[$'\"\r\n']/}
+      SOURCE_REALMDB_VER=${SOURCE_REALMDB_VER//required_/}
+      ;;
 
-      # try to read character db revision
-      *REVISION_DB_CHARACTERS*)
+    # try to read character db revision
+    *REVISION_DB_CHARACTERS*)
       sarray=($line)
-      SOURCE_CHARACTERDB_VER=${sarray[2]//[$'\"\r\n']}
-      SOURCE_CHARACTERDB_VER=${SOURCE_CHARACTERDB_VER//required_};;
+      SOURCE_CHARACTERDB_VER=${sarray[2]//[$'\"\r\n']/}
+      SOURCE_CHARACTERDB_VER=${SOURCE_CHARACTERDB_VER//required_/}
+      ;;
 
-      # try to read world db revision
-      *REVISION_DB_MANGOS*)
+    # try to read world db revision
+    *REVISION_DB_MANGOS*)
       sarray=($line)
-      SOURCE_WORLDDB_VER=${sarray[2]//[$'\"\r\n']}
-      SOURCE_WORLDDB_VER=${SOURCE_WORLDDB_VER//required_};;
+      SOURCE_WORLDDB_VER=${sarray[2]//[$'\"\r\n']/}
+      SOURCE_WORLDDB_VER=${SOURCE_WORLDDB_VER//required_/}
+      ;;
 
-      # try to read logs db revision
-      *REVISION_DB_LOGS*)
+    # try to read logs db revision
+    *REVISION_DB_LOGS*)
       sarray=($line)
-      SOURCE_LOGSDB_VER=${sarray[2]//[$'\"\r\n']}
-      SOURCE_LOGSDB_VER=${SOURCE_LOGSDB_VER//required_};;
+      SOURCE_LOGSDB_VER=${sarray[2]//[$'\"\r\n']/}
+      SOURCE_LOGSDB_VER=${SOURCE_LOGSDB_VER//required_/}
+      ;;
 
     esac
   done <"$revision_file"
@@ -1098,8 +1073,7 @@ function get_current_source_db_version()
 }
 
 # Update world db using core update
-function apply_world_db_core_update()
-{
+function apply_world_db_core_update() {
   echo "> Trying to process last world (mangos) CORE updates"
 
   if [[ "$STATUS_WORLD_DB_FOUND" = "false" ]] || [[ "$DB_WORLDDB_VERSION" = "0" ]]; then
@@ -1117,8 +1091,7 @@ function apply_world_db_core_update()
   # convert to int
   local LAST_CORE_REV=$((10#$rev))
 
-  if [ "$LAST_CORE_REV" -eq 0 ]
-  then
+  if [ "$LAST_CORE_REV" -eq 0 ]; then
     echo ">>> ERROR: cannot get last core revision in DB"
     false
     return
@@ -1127,17 +1100,13 @@ function apply_world_db_core_update()
   local UPD_PROCESSED=0
   local UPD_FOUND=0
   local CORE_REVS=()
-  for NEXT_MILESTONE in ${NEXT_MILESTONES};
-  do
+  for NEXT_MILESTONE in ${NEXT_MILESTONES}; do
     # A new milestone was released, apply additional updates
-    if [ -e "${CORE_PATH}/sql/updates/${NEXT_MILESTONE}/" ]
-    then
+    if [ -e "${CORE_PATH}/sql/updates/${NEXT_MILESTONE}/" ]; then
       echo "  Trying to process core updates from milestone $NEXT_MILESTONE ..."
-      for f in "${CORE_PATH}/sql/archives/${NEXT_MILESTONE}/${DATABASE_UPDATE_FILE_PREFIX}*_*_mangos_*.sql"
-      do
-        CUR_REV=`basename "$f" | sed 's/^\z\([0-9]*\)_.*/\1/' `
-        if [ "$CUR_REV" -gt "$LAST_CORE_REV" ]
-        then
+      for f in "${CORE_PATH}/sql/archives/${NEXT_MILESTONE}/${DATABASE_UPDATE_FILE_PREFIX}*_*_mangos_*.sql"; do
+        CUR_REV=$(basename "$f" | sed 's/^\z\([0-9]*\)_.*/\1/')
+        if [ "$CUR_REV" -gt "$LAST_CORE_REV" ]; then
           # found a newer core update file
           local fName=$(basename "$f")
           if ! execute_sql_file "$WORLD_DB_NAME" "$f" "  - Applying $fName"; then
@@ -1154,8 +1123,7 @@ function apply_world_db_core_update()
 
   #local wdbrev=$(echo "$SOURCE_WORLDDB_VER" |sed 's/[a-z]*\([0-9]*\)_\([0-9]*\).*/\1\2/g')
   #echo "    $EXPANSION DB core rev($LAST_CORE_REV), expected core rev($wdbrev)"
-  for f in "$CORE_PATH/sql/updates/mangos/"*_mangos_*.sql
-  do
+  for f in "$CORE_PATH/sql/updates/mangos/"*_mangos_*.sql; do
     CUR_REV=$(basename "$f" | sed "s/^$DATABASE_UPDATE_FILE_PREFIX\([0-9]*\)_\([0-9]*\).*/\1\2/")
     if [ "$CUR_REV" -gt "$LAST_CORE_REV" ]; then
       # found a newer core update file
@@ -1176,8 +1144,7 @@ function apply_world_db_core_update()
   true
 }
 
-function apply_char_db_core_update()
-{
+function apply_char_db_core_update() {
   echo "> Trying to process last Characters CORE updates"
   if [[ "$STATUS_CHAR_DB_FOUND" = "false" ]] || [[ "$DB_CHARDB_VERSION" = "0" ]]; then
     echo ">>> ERROR: cannot get last core revision in DB"
@@ -1194,8 +1161,7 @@ function apply_char_db_core_update()
   # convert to int
   local LAST_CORE_REV=$((10#$rev))
 
-  if [ "$LAST_CORE_REV" -eq 0 ]
-  then
+  if [ "$LAST_CORE_REV" -eq 0 ]; then
     echo ">>> ERROR: cannot get last core revision in DB"
     false
     return
@@ -1205,8 +1171,7 @@ function apply_char_db_core_update()
   local UPD_FOUND=0
   local CORE_REVS=()
 
-  for f in "$CORE_PATH/sql/updates/characters/"*characters_*.sql
-  do
+  for f in "$CORE_PATH/sql/updates/characters/"*characters_*.sql; do
     CUR_REV=$(basename "$f" | sed "s/^$DATABASE_UPDATE_FILE_PREFIX\([0-9]*\)_\([0-9]*\).*/\1\2/")
     if [ "$CUR_REV" -gt "$LAST_CORE_REV" ]; then
       # found a newer core update file
@@ -1227,8 +1192,7 @@ function apply_char_db_core_update()
   true
 }
 
-function apply_realm_db_core_update()
-{
+function apply_realm_db_core_update() {
   echo "> Trying to process last Realm CORE updates"
 
   if [[ "$STATUS_REALM_DB_FOUND" = "false" ]] || [[ "$DB_REALMDB_VERSION" = "0" ]]; then
@@ -1246,8 +1210,7 @@ function apply_realm_db_core_update()
   # convert to int
   local LAST_CORE_REV=$((10#$rev))
 
-  if [ "$LAST_CORE_REV" -eq 0 ]
-  then
+  if [ "$LAST_CORE_REV" -eq 0 ]; then
     echo ">>> ERROR: cannot get last core revision in DB"
     false
     return
@@ -1257,8 +1220,7 @@ function apply_realm_db_core_update()
   local UPD_FOUND=0
   local CORE_REVS=()
 
-  for f in "$CORE_PATH/sql/updates/realmd/"*realmd*.sql
-  do
+  for f in "$CORE_PATH/sql/updates/realmd/"*realmd*.sql; do
     CUR_REV=$(basename "$f" | sed "s/^$DATABASE_UPDATE_FILE_PREFIX\([0-9]*\)_\([0-9]*\).*/\1\2/")
     if [ "$CUR_REV" -gt "$LAST_CORE_REV" ]; then
       # found a newer core update file
@@ -1279,8 +1241,7 @@ function apply_realm_db_core_update()
   true
 }
 
-function apply_logs_db_core_update()
-{
+function apply_logs_db_core_update() {
   echo "> Trying to process last Logs CORE updates"
 
   if [[ "$STATUS_LOGS_DB_FOUND" = "false" ]] || [[ "$DB_LOGSDB_VERSION" = "0" ]]; then
@@ -1298,8 +1259,7 @@ function apply_logs_db_core_update()
   # convert to int
   local LAST_CORE_REV=$((10#$rev))
 
-  if [ "$LAST_CORE_REV" -eq 0 ]
-  then
+  if [ "$LAST_CORE_REV" -eq 0 ]; then
     echo ">>> ERROR: cannot get last core revision in DB"
     false
     return
@@ -1309,8 +1269,7 @@ function apply_logs_db_core_update()
   local UPD_FOUND=0
   local CORE_REVS=()
 
-  for f in "$CORE_PATH/sql/updates/logs/"*logs*.sql
-  do
+  for f in "$CORE_PATH/sql/updates/logs/"*logs*.sql; do
     CUR_REV=$(basename "$f" | sed "s/^$DATABASE_UPDATE_FILE_PREFIX\([0-9]*\)_\([0-9]*\).*/\1\2/")
     if [ "$CUR_REV" -gt "$LAST_CORE_REV" ]; then
       # found a newer core update file
@@ -1331,8 +1290,7 @@ function apply_logs_db_core_update()
   true
 }
 
-function apply_core_update()
-{
+function apply_core_update() {
   check_dbs_accessibility
   if ! apply_world_db_core_update; then
     false
@@ -1353,17 +1311,15 @@ function apply_core_update()
   true
 }
 
-function apply_ahbot_data()
-{
+function apply_ahbot_data() {
   # Apply optional AHBot commands documentation
   if [ "$AHBOT" = "YES" ]; then
     echo "> Trying to apply $CORE_PATH/sql/base/ahbot ..."
-    for f in "$CORE_PATH/sql/base/ahbot/"*.sql
-    do
-        if ! execute_sql_file "$WORLD_DB_NAME" "$f" "  - Applying $f"; then
-          false
-          return
-        fi
+    for f in "$CORE_PATH/sql/base/ahbot/"*.sql; do
+      if ! execute_sql_file "$WORLD_DB_NAME" "$f" "  - Applying $f"; then
+        false
+        return
+      fi
     done
     echo
   fi
@@ -1371,11 +1327,9 @@ function apply_ahbot_data()
 }
 
 # Apply dbc folder
-function apply_full_dbc_data()
-{
+function apply_full_dbc_data() {
   echo "> Trying to apply dbc datas"
-  for f in "$CORE_PATH/sql/base/dbc/original_data/"*.sql
-  do
+  for f in "$CORE_PATH/sql/base/dbc/original_data/"*.sql; do
     local fName=$(basename "$f")
     if ! execute_sql_file "$WORLD_DB_NAME" "$f" "  - Applying $fName"; then
       false
@@ -1385,9 +1339,9 @@ function apply_full_dbc_data()
   echo "  Original DBC data were applied successfully!"
   echo
 
-    # Apply dbc changes (specific fixes to known wrong/missing data)
+  # Apply dbc changes (specific fixes to known wrong/missing data)
   echo "> Trying to apply CMaNGOS fixes to dbc datas ... "
-  for f in "$CORE_PATH/sql/base/dbc/cmangos_fixes/"*.sql;do
+  for f in "$CORE_PATH/sql/base/dbc/cmangos_fixes/"*.sql; do
     local fName=$(basename "$f")
     if ! execute_sql_file "$WORLD_DB_NAME" "$f" "  - Applying $fName"; then
       false
@@ -1400,11 +1354,9 @@ function apply_full_dbc_data()
 }
 
 # Apply scriptdev2.sql
-function apply_full_scriptdev2_data()
-{
+function apply_full_scriptdev2_data() {
   echo "> Trying to apply ScriptDev2 data"
-  for f in "$CORE_PATH/sql/scriptdev2/"*.sql
-  do
+  for f in "$CORE_PATH/sql/scriptdev2/"*.sql; do
     local fName=$(basename "$f")
     if ! execute_sql_file "$WORLD_DB_NAME" "$f" "  - Applying $fName"; then
       false
@@ -1416,8 +1368,7 @@ function apply_full_scriptdev2_data()
 }
 
 # Apply full ACID file
-function apply_acid_data()
-{
+function apply_acid_data() {
   if ! execute_sql_file "$WORLD_DB_NAME" "ACID/acid_${EXPANSION_LC}.sql" "> Trying to apply ACID file"; then
     false
     return
@@ -1427,8 +1378,7 @@ function apply_acid_data()
 }
 
 # Apply cmangos_custom.sql
-function apply_custom_data()
-{
+function apply_custom_data() {
   if ! execute_sql_file "$WORLD_DB_NAME" "${ADDITIONAL_PATH}utilities/cmangos_custom.sql" "> Trying to apply cmangos_custom.sql"; then
     false
     return
@@ -1438,11 +1388,10 @@ function apply_custom_data()
 }
 
 # Apply locales
-function apply_locales()
-{
+function apply_locales() {
   if [ "$LOCALES" = "YES" ]; then
     echo "> Trying to apply locales data (May take some minutes) ..."
-    for UPDATE in ${ADDITIONAL_PATH}locales/*.sql;do
+    for UPDATE in ${ADDITIONAL_PATH}locales/*.sql; do
       if ! execute_sql_file "$WORLD_DB_NAME" "$UPDATE" "  - Applying $UPDATE"; then
         false
         return
@@ -1454,8 +1403,7 @@ function apply_locales()
 }
 
 # Apply dev custom changes
-function apply_dev_content
-{
+function apply_dev_content {
   if [ "$DEV_UPDATES" != "YES" ]; then
     true
     return
@@ -1487,13 +1435,12 @@ function apply_dev_content
 }
 
 # Apply mangosbot custom sql files
-function apply_mangosbot_custom_db
-{
+function apply_mangosbot_custom_db {
   if [ "$BOTS_DB" != "YES" ]; then
     true
     return
   fi
-  
+
   echo "> Trying to apply mangosbot custom sql for world db..."
   for UPDATEFILE in ${CORE_PATH}/sql/custom/mangos/*.sql; do
     if [ -e "$UPDATEFILE" ]; then
@@ -1504,7 +1451,7 @@ function apply_mangosbot_custom_db
       fi
     fi
   done
-  
+
   echo "> Trying to apply mangosbot custom sql for characters db..."
   for UPDATEFILE in ${CORE_PATH}/sql/custom/characters/*.sql; do
     if [ -e "$UPDATEFILE" ]; then
@@ -1515,26 +1462,25 @@ function apply_mangosbot_custom_db
       fi
     fi
   done
-  
+
   echo
   true
 }
 
 # Apply playerbot sql files
-function apply_playerbots_db
-{
+function apply_playerbots_db {
   if [ "$BOTS_DB" != "YES" ]; then
     true
     return
   fi
 
   echo "> Trying to apply playerbots expansion specific files..."
-  BOT_EXP_PREFIX="classic";
+  BOT_EXP_PREFIX="classic"
   if [ "$EXPANSION" = "TBC" ]; then
-    BOT_EXP_PREFIX="tbc";
+    BOT_EXP_PREFIX="tbc"
   fi
   if [ "$EXPANSION" = "WoTLK" ]; then
-    BOT_EXP_PREFIX="wotlk";
+    BOT_EXP_PREFIX="wotlk"
   fi
 
   echo "> Trying to apply playerbots sql mods for world db..."
@@ -1558,7 +1504,7 @@ function apply_playerbots_db
       fi
     fi
   done
-  
+
   # echo "> Trying to apply sql merge file..."
   # if ! execute_sql_file "$PLAYERBOTS_DB_NAME" "${CORE_PATH}/src/modules/Bots/sql/other/database_merge_${BOT_EXP_PREFIX}.sql"; then
   #   echo "FAILED!"
@@ -1572,9 +1518,8 @@ function apply_playerbots_db
 }
 
 # Content db installation
-function apply_content_db()
-{
-    ## Full Database
+function apply_content_db() {
+  ## Full Database
   echo "> Processing main ${EXPANSION}-DB release file \"$DB_RELEASE_TITLE\" ... "
   if ! apply_main_file; then
     false
@@ -1584,8 +1529,7 @@ function apply_content_db()
   ## Updates
   echo "> Trying to process ${EXPANSION}-DB updates"
   local COUNT=0
-  for UPDATE in "${ADDITIONAL_PATH}Updates/"[0-9]*.sql
-  do
+  for UPDATE in "${ADDITIONAL_PATH}Updates/"[0-9]*.sql; do
     if [ -e "$UPDATE" ]; then
       if ! execute_sql_file "$WORLD_DB_NAME" "$UPDATE" "  - Applying $UPDATE"; then
         false
@@ -1629,8 +1573,7 @@ function apply_content_db()
 
   echo "> Trying to apply instance files ..."
   COUNT=0
-  for INSTANCE in "${ADDITIONAL_PATH}Updates/Instances/"[0-9]*.sql
-  do
+  for INSTANCE in "${ADDITIONAL_PATH}Updates/Instances/"[0-9]*.sql; do
     if [ -e "$INSTANCE" ]; then
       local iName=$(basename "$INSTANCE")
       if ! execute_sql_file "$WORLD_DB_NAME" "$INSTANCE" "  - Applying $iName"; then
@@ -1640,8 +1583,7 @@ function apply_content_db()
       ((COUNT++))
     fi
   done
-  if [ "$COUNT" != 0 ]
-  then
+  if [ "$COUNT" != 0 ]; then
     echo "  $COUNT Instance files applied successfully"
   else
     echo "  Did not find any instance file to apply"
@@ -1653,15 +1595,14 @@ function apply_content_db()
 }
 
 # Content db installation
-function apply_full_content_db()
-{
+function apply_full_content_db() {
   if [[ "$1" = true ]]; then
     clear
     if [[ "$FORCE_WAIT" = "YES" ]]; then
-        if ! are_you_sure "Install"; then
-          echo "Aborting ..."
-          return
-        fi
+      if ! are_you_sure "Install"; then
+        echo "Aborting ..."
+        return
+      fi
     fi
   fi
 
@@ -1719,13 +1660,13 @@ function apply_full_content_db()
     false
     return
   fi
-  
+
   # Apply playerbots sql
   if ! apply_playerbots_db; then
     false
     return
   fi
-  
+
   # Apply mangosbot custom sql
   if ! apply_mangosbot_custom_db; then
     false
@@ -1735,15 +1676,14 @@ function apply_full_content_db()
   true
 }
 
-function create_db_user_and_set_privileges()
-{
+function create_db_user_and_set_privileges() {
   if [[ "$1" = true ]]; then
     clear
 
     if [[ "$STATUS_USER_SUCCESS" = true ]]; then
       echo "Warning: User already exist, you will reset all privileges to default!"
     fi
-    if [ ! -z $DB_CHARDB_VERSION ] OR [ ! -z $DB_REALMDB_VERSION ] OR [ ! -z $DB_WORLDDB_VERSION ] OR [ ! -z $DB_LOGSDB_VERSION ];then
+    if [ ! -z $DB_CHARDB_VERSION ] OR [ ! -z $DB_REALMDB_VERSION ] OR [ ! -z $DB_WORLDDB_VERSION ] OR [ ! -z $DB_LOGSDB_VERSION ]; then
       echo "Warning: At least one database contains some data that you are about to reset to default!"
     fi
     if ! are_you_sure "CreateAll"; then
@@ -1761,8 +1701,7 @@ function create_db_user_and_set_privileges()
   sqlcreate+=("$SQL_GRANT_TO_LOGS_DATABASE")
   sqlcreate+=("$SQL_GRANT_TO_PLAYERBOTS_DATABASE")
   export MYSQL_PWD="$ROOTPASSWORD"
-  for sql in "${sqlcreate[@]}"
-  do
+  for sql in "${sqlcreate[@]}"; do
     ERRORS=$("$MYSQL_PATH" -u"$ROOTUSERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -s -N -e"$sql" 2>&1)
     if [[ $? != 0 ]]; then
       echo "FAILED!"
@@ -1777,8 +1716,7 @@ function create_db_user_and_set_privileges()
   true
 }
 
-function delete_all_databases_and_user
-{
+function delete_all_databases_and_user {
   if [[ "$1" = true ]]; then
     clear
     if ! are_you_sure "DeleteAll"; then
@@ -1792,8 +1730,7 @@ function delete_all_databases_and_user
   sqlcreate+=("$SQL_DROP_REALM_DB")
   sqlcreate+=("$SQL_DROP_LOGS_DB")
   export MYSQL_PWD="$ROOTPASSWORD"
-  for sql in "${sqlcreate[@]}"
-  do
+  for sql in "${sqlcreate[@]}"; do
     ERRORS=$("$MYSQL_PATH" -u"$ROOTUSERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -s -N -e"$sql" 2>&1)
     if [[ $? != 0 ]]; then
       echo "FAILED!"
@@ -1807,25 +1744,43 @@ function delete_all_databases_and_user
   true
 }
 
-function create_database()
-{
+function create_database() {
   local dbname=""
   local createSql=""
   local dropSql=""
   case $1 in
-    "WORLD") dbname="${WORLD_DB_NAME}"; createSql="$SQL_CREATE_WORLD_DB"; dropSql="$SQL_DROP_WORLD_DB";;
-    "CHAR") dbname="${CHAR_DB_NAME}"; createSql="$SQL_CREATE_CHAR_DB"; dropSql="$SQL_DROP_CHAR_DB";;
-    "REALM") dbname="${REALM_DB_NAME}"; createSql="$SQL_CREATE_REALM_DB"; dropSql="$SQL_DROP_REALM_DB";;
-    "LOGS") dbname="${LOGS_DB_NAME}"; createSql="$SQL_CREATE_LOGS_DB"; dropSql="$SQL_DROP_LOGS_DB";;
-    "PLAYERBOTS") dbname="${PLAYERBOTS_DB_NAME}"; createSql="$SQL_CREATE_PLAYERBOTS_DB"; dropSql="$SQL_DROP_PLAYERBOTS_DB";;
+  "WORLD")
+    dbname="${WORLD_DB_NAME}"
+    createSql="$SQL_CREATE_WORLD_DB"
+    dropSql="$SQL_DROP_WORLD_DB"
+    ;;
+  "CHAR")
+    dbname="${CHAR_DB_NAME}"
+    createSql="$SQL_CREATE_CHAR_DB"
+    dropSql="$SQL_DROP_CHAR_DB"
+    ;;
+  "REALM")
+    dbname="${REALM_DB_NAME}"
+    createSql="$SQL_CREATE_REALM_DB"
+    dropSql="$SQL_DROP_REALM_DB"
+    ;;
+  "LOGS")
+    dbname="${LOGS_DB_NAME}"
+    createSql="$SQL_CREATE_LOGS_DB"
+    dropSql="$SQL_DROP_LOGS_DB"
+    ;;
+  "PLAYERBOTS")
+    dbname="${PLAYERBOTS_DB_NAME}"
+    createSql="$SQL_CREATE_PLAYERBOTS_DB"
+    dropSql="$SQL_DROP_PLAYERBOTS_DB"
+    ;;
   esac
 
   echo -n "> Creating $dbname database ... "
   local sqlcreate=("$dropSql")
   sqlcreate+=("$createSql")
   export MYSQL_PWD="$ROOTPASSWORD"
-  for sql in "${sqlcreate[@]}"
-  do
+  for sql in "${sqlcreate[@]}"; do
     ERRORS=$("$MYSQL_PATH" -u"$ROOTUSERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -s -N -e"$sql" 2>&1)
     if [[ $? != 0 ]]; then
       echo "FAILED!"
@@ -1837,8 +1792,7 @@ function create_database()
   echo "SUCCESS"
 }
 
-function create_and_fill_world_db()
-{
+function create_and_fill_world_db() {
   if [[ "$1" = true ]]; then
     clear
     if ! are_you_sure "World"; then
@@ -1871,8 +1825,7 @@ function create_and_fill_world_db()
   true
 }
 
-function create_and_fill_char_db()
-{
+function create_and_fill_char_db() {
   if [[ "$1" = true ]]; then
     clear
     if ! are_you_sure "Characters"; then
@@ -1897,8 +1850,7 @@ function create_and_fill_char_db()
   true
 }
 
-function create_and_fill_realm_db()
-{
+function create_and_fill_realm_db() {
   if [[ "$1" = true ]]; then
     clear
     if ! are_you_sure "Realmd"; then
@@ -1923,8 +1875,7 @@ function create_and_fill_realm_db()
   true
 }
 
-function create_and_fill_logs_db()
-{
+function create_and_fill_logs_db() {
   if [[ "$1" = true ]]; then
     clear
     if ! are_you_sure "Logs"; then
@@ -1945,8 +1896,7 @@ function create_and_fill_logs_db()
   true
 }
 
-function create_and_fill_playerbots_db()
-{
+function create_and_fill_playerbots_db() {
   if [ "$BOTS_DB" != "YES" ]; then
     true
     return
@@ -1970,8 +1920,7 @@ function create_and_fill_playerbots_db()
   true
 }
 
-function create_all_databases_and_user()
-{
+function create_all_databases_and_user() {
   clear
   if ! are_you_sure "DeleteAll"; then
     return
@@ -2014,11 +1963,12 @@ function create_all_databases_and_user()
   fi
 }
 
-function print_realm_list()
-{
-  printf "%0.1s" "="{1..80};printf "\n"
+function print_realm_list() {
+  printf "%0.1s" "="{1..80}
+  printf "\n"
   printf "%-4.4s| %-32.32s| %-31.31s| %-6.6s|\n" "Id" "Name" "Address" "Port"
-  printf "%0.1s" "="{1..80};printf "\n"
+  printf "%0.1s" "="{1..80}
+  printf "\n"
   export MYSQL_PWD="$MYSQL_PASSWORD"
   local result=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -s -N -D"$REALM_DB_NAME" -e"$SQL_QUERY_REALM_LIST" 2>&1)
   if [[ $? != 0 ]]; then
@@ -2028,31 +1978,33 @@ function print_realm_list()
   fi
 
   IFS='\n'
-  while read line
-  do
+  while read line; do
     # clean the result that might contain LF or CR char
-    line=${line//[$'\r\n']}
+    line=${line//[$'\r\n']/}
     CURRENT_REALM_LIST+=("$line")
 
     # fill our array variable
-    IFS=$'\t'; realmdata=($line); IFS="$OLDIFS"
+    IFS=$'\t'
+    realmdata=($line)
+    IFS="$OLDIFS"
 
     # split result so we can print them on specific places (result are separed using tab) realmdata=($line)
     printf "%-4.4s| %-32.32s| %-31.31s| %-6.6s| \n" "${realmdata[0]}" "${realmdata[1]}" "${realmdata[2]}" "${realmdata[3]}"
-    printf "%0.1s" "-"{1..80};printf "\n"
+    printf "%0.1s" "-"{1..80}
+    printf "\n"
   done < <(printf '%s\n' $result)
   IFS="$OLDIFS"
 }
 
-function realm_edit()
-{
+function realm_edit() {
   local found=false
   local choice
   read -e -p "Please enter your realm id .....: " choice
-  for realmdata in "${CURRENT_REALM_LIST[@]}"
-  do
+  for realmdata in "${CURRENT_REALM_LIST[@]}"; do
     # split result so we can print them on specific places (result are separed using tab)
-    IFS=$'\t';realmdata=($realmdata); IFS="$OLDIFS"
+    IFS=$'\t'
+    realmdata=($realmdata)
+    IFS="$OLDIFS"
 
     if [[ ${realmdata[0]} = "$choice" ]]; then
       found=true
@@ -2100,8 +2052,7 @@ function realm_edit()
   fi
 }
 
-function realm_add()
-{
+function realm_add() {
   clear
   local realmdata_default=("1" "CMaNGOS ${EXPANSION} server" "localhost" "8085")
   local realmdata="$realmdata_default"
@@ -2126,14 +2077,13 @@ function realm_add()
   local choice
   read -e -p "Is that correct [y/N]? " choice
   if [[ ! "$choice" =~ ^[Yy]$ ]]; then
-      return
+    return
   fi
   sql="$SQL_INSERT_REALM_LIST('${realmdata[0]}','${realmdata[1]}','${realmdata[2]}','${realmdata[3]}');"
   execute_sql_command "$REALM_DB_NAME" "$sql" "Adding new realm to database"
 }
 
-function realm_remove()
-{
+function realm_remove() {
   local choice
   read -e -p "Please enter realm id that you want to delete.....: " choice
 
@@ -2141,14 +2091,13 @@ function realm_remove()
   execute_sql_command "$REALM_DB_NAME" "$sql" "Deleting from realm to database"
 }
 
-function print_last_backup_list()
-{
+function print_last_backup_list() {
   local totalcount="${1:-5}"
   local count=1
   IFS=$'\n'
   while read -r currFile; do
     if [[ count -gt totalcount ]]; then
-      break;
+      break
     fi
     if [ ! -f "${currFile}" ]; then
       continue
@@ -2160,7 +2109,7 @@ function print_last_backup_list()
   IFS="$OLDIFS"
 
   if [[ count -le 1 ]]; then
-     echo "No individual db backup found!"
+    echo "No individual db backup found!"
   fi
 }
 
@@ -2168,8 +2117,7 @@ function print_last_backup_list()
 # something like 'z0000_01_table_awsome_fix.sql' will return 'z000001'
 # get_clean_core_version coreversion
 # return clean version in CLEAN_CORE_VERSION if success
-function get_clean_core_version()
-{
+function get_clean_core_version() {
   CLEAN_CORE_VERSION=""
   if [[ "$1" = "" ]]; then
     false
@@ -2188,38 +2136,40 @@ function get_clean_core_version()
 # build final name for backup file
 # build_backup_filename dbname
 # valid dbname: WORLD, CHAR, REALM, LOGS
-function build_backup_filename()
-{
+function build_backup_filename() {
   BACKUP_FILE_NAME=""
   local cleanversion=""
   local dbname="$1"
 
   case $1 in
-    "WORLD")
-      if ! get_clean_core_version $DB_WORLDDB_VERSION; then
-        false
-        return
-      fi
-      ;;
-    "CHAR")
-      if ! get_clean_core_version $DB_CHARDB_VERSION; then
-        false
-        return
-      fi
-      ;;
-    "REALM")
-      if ! get_clean_core_version $DB_REALMDB_VERSION; then
-        false
-        return
-      fi
-      ;;
-    "LOGS")
-      if ! get_clean_core_version $DB_LOGSDB_VERSION; then
-        false
-        return
-      fi
-      ;;
-    *) false; return;;
+  "WORLD")
+    if ! get_clean_core_version $DB_WORLDDB_VERSION; then
+      false
+      return
+    fi
+    ;;
+  "CHAR")
+    if ! get_clean_core_version $DB_CHARDB_VERSION; then
+      false
+      return
+    fi
+    ;;
+  "REALM")
+    if ! get_clean_core_version $DB_REALMDB_VERSION; then
+      false
+      return
+    fi
+    ;;
+  "LOGS")
+    if ! get_clean_core_version $DB_LOGSDB_VERSION; then
+      false
+      return
+    fi
+    ;;
+  *)
+    false
+    return
+    ;;
   esac
 
   cleanversion="${CLEAN_CORE_VERSION}"
@@ -2240,8 +2190,7 @@ function build_backup_filename()
 # backup_create dbname compress
 # compress is true by default
 # valid dbname: WORLD, CHAR, REALM, LOGS
-function backup_create()
-{
+function backup_create() {
   clear
   check_dbs_accessibility
   local compress=${2:-true}
@@ -2249,11 +2198,14 @@ function backup_create()
   local dbname=""
 
   case $1 in
-    "WORLD") dbname="${WORLD_DB_NAME}";;
-    "CHAR") dbname="${CHAR_DB_NAME}";;
-    "REALM") dbname="${REALM_DB_NAME}";;
-    "LOGS") dbname="${LOGS_DB_NAME}";;
-    *) false; return;;
+  "WORLD") dbname="${WORLD_DB_NAME}" ;;
+  "CHAR") dbname="${CHAR_DB_NAME}" ;;
+  "REALM") dbname="${REALM_DB_NAME}" ;;
+  "LOGS") dbname="${LOGS_DB_NAME}" ;;
+  *)
+    false
+    return
+    ;;
   esac
 
   if ! build_backup_filename $1; then
@@ -2271,7 +2223,7 @@ function backup_create()
 
   echo -ne "> Dumping $dbname ... "
   export MYSQL_PWD="$MYSQL_PASSWORD"
-  ERRORS=$("$MYSQL_DUMP_PATH" -u"$MYSQL_USERNAME"  ${dbname} --quick --single-transaction --compress --order-by-primary${MYSQL_COLSTAT} --result-file="${filename}" 2>&1)
+  ERRORS=$("$MYSQL_DUMP_PATH" -u"$MYSQL_USERNAME" ${dbname} --quick --single-transaction --compress --order-by-primary${MYSQL_COLSTAT} --result-file="${filename}" 2>&1)
   if [[ $? != 0 ]]; then
     echo "FAILED!"
     echo ">>> $ERRORS"
@@ -2294,8 +2246,7 @@ function backup_create()
   true
 }
 
-function download_latest_backup_file()
-{
+function download_latest_backup_file() {
   clear
   curl -L "${LAST_BACKUP_ADR}" -o "backups/all-backups.tar.gz"
   tar -xzvf backups/all-backups.tar.gz -C backups
@@ -2303,8 +2254,7 @@ function download_latest_backup_file()
   true
 }
 
-function backup_restore_file()
-{
+function backup_restore_file() {
   local filename=${1:-""}
   local warning=${2:-true}
   local dbname=""
@@ -2317,10 +2267,22 @@ function backup_restore_file()
   local regex="${EXPANSION_LC}-db_([A-Z]+)"
   if [[ "$1" =~ $regex ]]; then
     case ${BASH_REMATCH[1]} in
-      "WORLD") dbname="${WORLD_DB_NAME}"; dbtype="WORLD";;
-      "CHAR") dbname="${CHAR_DB_NAME}"; dbtype="CHAR";;
-      "REALM") dbname="${REALM_DB_NAME}"; dbtype="REALM";;
-      "LOGS") dbname="${LOGS_DB_NAME}"; dbtype="LOGS";;
+    "WORLD")
+      dbname="${WORLD_DB_NAME}"
+      dbtype="WORLD"
+      ;;
+    "CHAR")
+      dbname="${CHAR_DB_NAME}"
+      dbtype="CHAR"
+      ;;
+    "REALM")
+      dbname="${REALM_DB_NAME}"
+      dbtype="REALM"
+      ;;
+    "LOGS")
+      dbname="${LOGS_DB_NAME}"
+      dbtype="LOGS"
+      ;;
     esac
   fi
 
@@ -2362,7 +2324,7 @@ function backup_restore_file()
   filename=${filename%.gz}
   echo -ne "> Restoring $filename ... "
   export MYSQL_PWD="$MYSQL_PASSWORD"
-  ERRORS=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -D"$dbname" -sN < "$filename" 2>&1)
+  ERRORS=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -D"$dbname" -sN <"$filename" 2>&1)
   if [[ $? != 0 ]]; then
     echo "FAILED!"
     echo ">>> $ERRORS"
@@ -2373,8 +2335,7 @@ function backup_restore_file()
   true
 }
 
-function backup_restore_all_last()
-{
+function backup_restore_all_last() {
   local filenames=()
   local regex="${EXPANSION_LC}-db_([A-Z]+)"
   local lastWorldFile=""
@@ -2428,7 +2389,7 @@ function backup_restore_all_last()
     fi
 
     if [ ${#filenames[@]} -gt 3 ]; then
-      break;
+      break
     fi
 
   done < <(printf '%s\n' backups/${EXPANSION_LC}-db_*.gz | sort -zVr)
@@ -2439,8 +2400,7 @@ function backup_restore_all_last()
   done
 }
 
-function backup_restore()
-{
+function backup_restore() {
   local warning=${3:-true}
   local dbname=""
 
@@ -2451,7 +2411,7 @@ function backup_restore()
   IFS=$'\n'
   while read -r currFile; do
     if [[ count -gt 8 ]]; then
-      break;
+      break
     fi
     if [ ! -f "${currFile}" ]; then
       continue
@@ -2471,14 +2431,14 @@ function backup_restore()
   fi
 
   IFS=$'\n'
-  local choice=100;
+  local choice=100
   while true; do
     echo
     read -n 1 -e -p "Please choose a file to restore : " choice
     if [[ $choice -lt $count ]]; then
       break
     else
-      if [[ $choice -eq 9 ]];then
+      if [[ $choice -eq 9 ]]; then
         false
         return
       fi
@@ -2499,8 +2459,7 @@ function backup_restore()
 ###############################################
 ## User Menu ##################################
 ###############################################
-function manage_realmlist_menu()
-{
+function manage_realmlist_menu() {
   while true; do
     clear
     print_underline "Manage your realm list"
@@ -2516,17 +2475,25 @@ function manage_realmlist_menu()
     read -n 1 -e -p "Please enter your choice.....: " CHOICE
 
     case $CHOICE in
-      "1") realm_edit; wait_key;;
-      "2") realm_add; wait_key;;
-      "3") realm_remove; wait_key;;
-      "4") ;;
-      *) break;;
+    "1")
+      realm_edit
+      wait_key
+      ;;
+    "2")
+      realm_add
+      wait_key
+      ;;
+    "3")
+      realm_remove
+      wait_key
+      ;;
+    "4") ;;
+    *) break ;;
     esac
   done
 }
 
-function backup_create_db_menu()
-{
+function backup_create_db_menu() {
   while true; do
     clear
     print_underline "Create a backup of database" "="
@@ -2542,17 +2509,28 @@ function backup_create_db_menu()
     read -n 1 -e -p "Please enter your choice.....: " CHOICE
 
     case $CHOICE in
-      "1") backup_create "WORLD"; wait_key;;
-      "2") backup_create "CHAR"; wait_key;;
-      "3") backup_create "REALM"; wait_key;;
-      "4") backup_create "LOGS"; wait_key;;
-      *) break;;
+    "1")
+      backup_create "WORLD"
+      wait_key
+      ;;
+    "2")
+      backup_create "CHAR"
+      wait_key
+      ;;
+    "3")
+      backup_create "REALM"
+      wait_key
+      ;;
+    "4")
+      backup_create "LOGS"
+      wait_key
+      ;;
+    *) break ;;
     esac
   done
 }
 
-function backup_restore_db_menu()
-{
+function backup_restore_db_menu() {
   while true; do
     clear
     print_underline "Restore your database to previous state" "="
@@ -2568,17 +2546,28 @@ function backup_restore_db_menu()
     read -n 1 -e -p "Please enter your choice.....: " CHOICE
 
     case $CHOICE in
-      "1") backup_restore "WORLD"; wait_key;;
-      "2") backup_restore "CHAR"; wait_key;;
-      "3") backup_restore "REALM"; wait_key;;
-      "4") backup_restore "LOGS"; wait_key;;
-      *) break;;
+    "1")
+      backup_restore "WORLD"
+      wait_key
+      ;;
+    "2")
+      backup_restore "CHAR"
+      wait_key
+      ;;
+    "3")
+      backup_restore "REALM"
+      wait_key
+      ;;
+    "4")
+      backup_restore "LOGS"
+      wait_key
+      ;;
+    *) break ;;
     esac
   done
 }
 
-function manage_backup_menu()
-{
+function manage_backup_menu() {
   while true; do
     clear
     print_underline "Manage your db backup" "="
@@ -2594,16 +2583,15 @@ function manage_backup_menu()
     read -n 1 -e -p "Please enter your choice.....: " CHOICE
 
     case $CHOICE in
-      "1") download_latest_backup_file;;
-      "2") backup_create_db_menu;;
-      "3") backup_restore_db_menu;;
-      *) break;;
+    "1") download_latest_backup_file ;;
+    "2") backup_create_db_menu ;;
+    "3") backup_restore_db_menu ;;
+    *) break ;;
     esac
   done
 }
 
-function advanced_db_install_menu()
-{
+function advanced_db_install_menu() {
   while true; do
     if ! set_try_root_connect_to_db true; then
       return
@@ -2625,21 +2613,41 @@ function advanced_db_install_menu()
     read -n 1 -e -p "Please enter your choice.....: " CHOICE
 
     case $CHOICE in
-      "1") check_settings_menu;;
-      "2") create_and_fill_world_db true; wait_key;;
-      "3") create_and_fill_char_db true; wait_key;;
-      "4") create_and_fill_realm_db true; wait_key;;
-      "5") create_and_fill_logs_db true; wait_key;;
-      "6") create_db_user_and_set_privileges true; wait_key;;
-      "7") delete_all_databases_and_user true; wait_key;;
-      "8") create_and_fill_playerbots_db true; wait_key;;
-      *) break;;
+    "1") check_settings_menu ;;
+    "2")
+      create_and_fill_world_db true
+      wait_key
+      ;;
+    "3")
+      create_and_fill_char_db true
+      wait_key
+      ;;
+    "4")
+      create_and_fill_realm_db true
+      wait_key
+      ;;
+    "5")
+      create_and_fill_logs_db true
+      wait_key
+      ;;
+    "6")
+      create_db_user_and_set_privileges true
+      wait_key
+      ;;
+    "7")
+      delete_all_databases_and_user true
+      wait_key
+      ;;
+    "8")
+      create_and_fill_playerbots_db true
+      wait_key
+      ;;
+    *) break ;;
     esac
   done
 }
 
-function full_db_install_menu()
-{
+function full_db_install_menu() {
   while true; do
     if ! set_try_root_connect_to_db true; then
       return
@@ -2664,17 +2672,19 @@ function full_db_install_menu()
     read -n 1 -e -p "Please enter your choice.....: " CHOICE
 
     case $CHOICE in
-      "1") create_all_databases_and_user; wait_key;;
-      "2") check_settings_menu;;
-      "3") apply_full_content_db;;
-      "8") advanced_db_install_menu;;
-      *) break;;
+    "1")
+      create_all_databases_and_user
+      wait_key
+      ;;
+    "2") check_settings_menu ;;
+    "3") apply_full_content_db ;;
+    "8") advanced_db_install_menu ;;
+    *) break ;;
     esac
   done
 }
 
-function check_settings_menu()
-{
+function check_settings_menu() {
   while true; do
     clear
     print_underline "Manage all important settings"
@@ -2707,7 +2717,7 @@ function check_settings_menu()
 
     if [ ${#current_errors[@]} -gt 0 ]; then
       print_underline "Following errors should be fixed to be able to run this script:" "-"
-      for err in "${current_errors[@]}";do
+      for err in "${current_errors[@]}"; do
         echo ">>> $err"
       done
     else
@@ -2736,32 +2746,35 @@ function check_settings_menu()
     read -n 1 -e -p "Please enter your choice.....: " CHOICE
 
     case $CHOICE in
-      "1") change_mysql_settings; save_settings; set_sql_queries;;
-      "2") set_try_root_connect_to_db true;;
-      "3") ;;
-      "7") if [ "$mysql_ok" = false ]; then
-             if try_set_mysql_path; then
-               save_settings
-             fi
-           fi;;
-      "8") if [ "$core_path_ok" = false ]; then
-             if try_set_core_path; then
-               save_settings
-             fi
-           fi;;
-      "9") if [ ${#current_errors[@]} = 0 ] || [ "$STATUS_ROOT_SUCCESS" = true ]; then return; else break; fi;;
-      *) break;;
+    "1")
+      change_mysql_settings
+      save_settings
+      set_sql_queries
+      ;;
+    "2") set_try_root_connect_to_db true ;;
+    "3") ;;
+    "7") if [ "$mysql_ok" = false ]; then
+      if try_set_mysql_path; then
+        save_settings
+      fi
+    fi ;;
+    "8") if [ "$core_path_ok" = false ]; then
+      if try_set_core_path; then
+        save_settings
+      fi
+    fi ;;
+    "9") if [ ${#current_errors[@]} = 0 ] || [ "$STATUS_ROOT_SUCCESS" = true ]; then return; else break; fi ;;
+    *) break ;;
     esac
   done
   exit 0
 }
 
 # normal user menu
-function main_menu()
-{
+function main_menu() {
   while true; do
     # dont go further if minimal requirement is not satisfied
-    while true;do
+    while true; do
       clear
       echo "Checking minimum requirement please wait..."
       if check_minimum_requierements; then
@@ -2791,14 +2804,20 @@ function main_menu()
     read -n 1 -e -p "Please enter your choice.....: " CHOICE
 
     case $CHOICE in
-      "1") check_settings_menu;;
-      "2") apply_full_content_db true; wait_key;;
-      "3") apply_core_update; wait_key;;
-      "4") full_db_install_menu;;
-      "5") advanced_db_install_menu;;
-      "6") manage_realmlist_menu;;
-      "7") manage_backup_menu;;
-      *) break;;
+    "1") check_settings_menu ;;
+    "2")
+      apply_full_content_db true
+      wait_key
+      ;;
+    "3")
+      apply_core_update
+      wait_key
+      ;;
+    "4") full_db_install_menu ;;
+    "5") advanced_db_install_menu ;;
+    "6") manage_realmlist_menu ;;
+    "7") manage_backup_menu ;;
+    *) break ;;
     esac
   done
 }
@@ -2809,8 +2828,7 @@ function main_menu()
 
 # install all db by deleting all previous data without prompting if "DeleteAll" is set as arg3
 # arg1: root username arg2: root password
-function auto_script_create_all()
-{
+function auto_script_create_all() {
   echo "Automatic install starting..."
   ROOTUSERNAME="$1"
   ROOTPASSWORD="$2"
@@ -2871,8 +2889,7 @@ function auto_script_create_all()
 }
 
 # create all db and user without filling them
-function auto_script_create_all_db_and_user()
-{
+function auto_script_create_all_db_and_user() {
   echo "Creating all db and user..."
   ROOTUSERNAME="$1"
   ROOTPASSWORD="$2"
@@ -2924,8 +2941,7 @@ function auto_script_create_all_db_and_user()
 }
 
 # install world db using config file settings and normal user
-function auto_script_install_world()
-{
+function auto_script_install_world() {
   if [[ "$STATUS_CONFIG_JUST_CREATED" = true ]]; then
     echo
     print_underline "$CONFIG_FILE just been created, please edit it and rerun this script to install ${EXPANSION}-DB"
@@ -2950,13 +2966,12 @@ function auto_script_install_world()
 }
 
 # do a backup
-function auto_script_backup()
-{
+function auto_script_backup() {
   show_mysql_settings
   echo
   echo "Starting to backup your database ..."
   backup_create "WORLD"
-  if [[ "$1" = "full" ]];then
+  if [[ "$1" = "full" ]]; then
     backup_create "CHAR"
     backup_create "REALM"
     backup_create "LOGS"
@@ -2964,8 +2979,7 @@ function auto_script_backup()
 }
 
 # restore previous backup
-function auto_script_restore()
-{
+function auto_script_restore() {
   show_mysql_settings
   echo
   echo "Starting to restore your database ..."
@@ -2997,8 +3011,7 @@ function auto_script_restore()
 }
 
 # display little help
-function show_help
-{
+function show_help {
   echo "${EXPANSION}-DB install script"
   echo "$SCRIPT_FILE [options] [arg1 ... argn]"
   echo "options:"
@@ -3031,8 +3044,7 @@ function show_help
 ###############################################
 
 # Check if config file present
-if [[ ! -f "$CONFIG_FILE" ]]
-then
+if [[ ! -f "$CONFIG_FILE" ]]; then
   try_set_core_path
   try_set_mysql_path
   save_settings
