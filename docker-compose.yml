@@ -19,6 +19,11 @@ services:
     ports:
       - 33307:3306
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 5
         
   mangosd:
     build:
@@ -60,6 +65,9 @@ services:
       - seccomp:unconfined
     cap_add:
       - SYS_PTRACE
+    depends_on:
+      db:
+        condition: service_healthy
 
   realmd:
     build:

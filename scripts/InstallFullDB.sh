@@ -59,14 +59,13 @@ WORLD_DB_NAME_DEFAULT="${EXPANSION_LC}mangos"
 REALM_DB_NAME_DEFAULT="${EXPANSION_LC}realmd"
 CHAR_DB_NAME_DEFAULT="${EXPANSION_LC}characters"
 LOGS_DB_NAME_DEFAULT="${EXPANSION_LC}logs"
-PLAYERBOTS_DB_NAME_DEFAULT="${EXPANSION_LC}playerbots"
 MYSQL_PATH_DEFAULT=""
 CORE_PATH_DEFAULT=""
 MYSQL_DUMP_PATH_DEFAULT=""
-LOCALES_DEFAULT="NO"
+LOCALES_DEFAULT="YES"
 DEV_UPDATES_DEFAULT="NO"
 AHBOT_DEFAULT="YES"
-BOTS_DB_DEFAULT="YES"
+PLAYERBOTS_DB_DEFAULT="YES"
 FORCE_WAIT_DEFAULT="YES"
 
 # variables assigned and read from $CONFIG_FILE
@@ -80,13 +79,12 @@ WORLD_DB_NAME="${WORLD_DB_NAME_DEFAULT}"
 REALM_DB_NAME="${REALM_DB_NAME_DEFAULT}"
 CHAR_DB_NAME="${CHAR_DB_NAME_DEFAULT}"
 LOGS_DB_NAME="${LOGS_DB_NAME_DEFAULT}"
-PLAYERBOTS_DB_NAME="${PLAYERBOTS_DB_NAME_DEFAULT}"
 MYSQL_PATH="${MYSQL_PATH_DEFAULT}"
 CORE_PATH="${CORE_PATH_DEFAULT}"
 MYSQL_DUMP_PATH="${MYSQL_DUMP_PATH_DEFAULT}"
 LOCALES="${LOCALES_DEFAULT}"
 DEV_UPDATES="${DEV_UPDATES_DEFAULT}"
-BOTS_DB="${BOTS_DB_DEFAULT}"
+PLAYERBOTS_DB="${PLAYERBOTS_DB_DEFAULT}"
 AHBOT="${AHBOT_DEFAULT}"
 FORCE_WAIT="${FORCE_WAIT_DEFAULT}"
 
@@ -208,16 +206,13 @@ function set_sql_queries {
   SQL_CREATE_CHAR_DB="CREATE DATABASE \`$CHAR_DB_NAME\` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;"
   SQL_CREATE_REALM_DB="CREATE DATABASE \`$REALM_DB_NAME\` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;"
   SQL_CREATE_LOGS_DB="CREATE DATABASE \`$LOGS_DB_NAME\` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;"
-  SQL_CREATE_PLAYERBOTS_DB="CREATE DATABASE \`$PLAYERBOTS_DB_NAME\` DEFAULT CHARACTER SET utf8 COLLATE utf8_general_ci;"
 
   # create database user and grant privileges
-  SQL_CREATE_ROOT_USER="CREATE USER 'root'@'$MYSQL_USERIP' IDENTIFIED BY '$MYSQL_PASSWORD';"
   SQL_CREATE_DATABASE_USER="CREATE USER IF NOT EXISTS '$MYSQL_USERNAME'@'$MYSQL_USERIP' IDENTIFIED BY '$MYSQL_PASSWORD';"
   SQL_GRANT_TO_WORLD_DATABASE="GRANT INDEX, SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES, EXECUTE, ALTER ROUTINE, CREATE ROUTINE ON \`$WORLD_DB_NAME\`.* TO '$MYSQL_USERNAME'@'$MYSQL_USERIP';"
-  SQL_GRANT_TO_CHAR_DATABASE=("GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON \`$CHAR_DB_NAME\`.* TO '$MYSQL_USERNAME'@'$MYSQL_USERIP';")
+  SQL_GRANT_TO_CHAR_DATABASE=("GRANT INDEX, SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON \`$CHAR_DB_NAME\`.* TO '$MYSQL_USERNAME'@'$MYSQL_USERIP';")
   SQL_GRANT_TO_REALM_DATABASE=("GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON \`$REALM_DB_NAME\`.* TO '$MYSQL_USERNAME'@'$MYSQL_USERIP';")
   SQL_GRANT_TO_LOGS_DATABASE=("GRANT SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON \`$LOGS_DB_NAME\`.* TO '$MYSQL_USERNAME'@'$MYSQL_USERIP';")
-  SQL_GRANT_TO_PLAYERBOTS_DATABASE=("GRANT INDEX, SELECT, INSERT, UPDATE, DELETE, CREATE, DROP, ALTER, LOCK TABLES, CREATE TEMPORARY TABLES ON \`$PLAYERBOTS_DB_NAME\`.* TO '$MYSQL_USERNAME'@'$MYSQL_USERIP';")
 
   # delete user
   SQL_DROP_DATABASE_USER="DROP USER IF EXISTS '$MYSQL_USERNAME'@'$MYSQL_USERIP';"
@@ -227,7 +222,6 @@ function set_sql_queries {
   SQL_DROP_CHAR_DB="DROP DATABASE IF EXISTS \`$CHAR_DB_NAME\`;"
   SQL_DROP_REALM_DB="DROP DATABASE IF EXISTS \`$REALM_DB_NAME\`;"
   SQL_DROP_LOGS_DB="DROP DATABASE IF EXISTS \`$LOGS_DB_NAME\`;"
-  SQL_DROP_PLAYERBOTS_DB="DROP DATABASE IF EXISTS \`$PLAYERBOTS_DB_NAME\`;"
 
   # query realm list
   SQL_QUERY_REALM_LIST="SELECT * FROM realmlist;"
@@ -279,7 +273,6 @@ function save_settings() {
   allsettings+=("REALM_DB_NAME=\"$REALM_DB_NAME\"")
   allsettings+=("CHAR_DB_NAME=\"$CHAR_DB_NAME\"")
   allsettings+=("LOGS_DB_NAME=\"$LOGS_DB_NAME\"")
-  allsettings+=("PLAYERBOTS_DB_NAME=\"$PLAYERBOTS_DB_NAME\"")
   allsettings+=("")
   allsettings+=("## Define your mysql program if this differs")
   allsettings+=("MYSQL_PATH=\"$MYSQL_PATH\"")
@@ -305,9 +298,9 @@ function save_settings() {
   allsettings+=("## Set the variable to \"YES\" to import AHBot sql.")
   allsettings+=("AHBOT=\"$AHBOT\"")
   allsettings+=("")
-  allsettings+=("## Define if the 'src/modules/Bots/sql' directory for processing development SQL files needs to be used")
+  allsettings+=("## Define if the 'src/modules/PlayerBots/sql' directory for processing development SQL files needs to be used")
   allsettings+=("##   Set the variable to \"YES\" to use the playerbots directory")
-  allsettings+=("BOTS_DB=\"$BOTS_DB\"")
+  allsettings+=("PLAYERBOTS_DB=\"$PLAYERBOTS_DB\"")
   allsettings+=("")
   allsettings+=("# Enjoy using the tool")
 
@@ -455,7 +448,7 @@ function print_header() {
 # try connect to db
 function try_connect_to_db() {
   export MYSQL_PWD="$MYSQL_PASSWORD"
-  ERRORS=$("$MYSQL_PATH" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u$MYSQL_USERNAME --connect-timeout=2 -s -e';' 2>&1)
+  ERRORS=$("$MYSQL_PATH" -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USERNAME --connect-timeout=2 -s -e';' 2>&1)
   if [[ $? != 0 ]]; then
     STATUS_USER_SUCCESS=false
     false
@@ -488,7 +481,7 @@ function set_try_root_connect_to_db {
       echo -n "Checking mysql database accessibility with root access..."
     fi
     export MYSQL_PWD="$ROOTPASSWORD"
-    ERRORS=$("$MYSQL_PATH" -u"$ROOTUSERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" --connect-timeout=3 -s -N -e";" 2>&1)
+    ERRORS=$("$MYSQL_PATH" -u"$ROOTUSERNAME" -h"$MYSQL_HOST" -P"$MYSQL_PORT" --connect-timeout=3 -s -N -e";" 2>&1)
     if [[ $? != 0 ]]; then
       if [ "$showstatus" = true ]; then echo "FAILED!"; fi
       echo ">>> $ERRORS"
@@ -574,7 +567,7 @@ function check_minimum_requierements() {
 function execute_sql_command() {
   if [ ! -z "$3" ]; then echo -n "$3 ... "; fi
   export MYSQL_PWD="$MYSQL_PASSWORD"
-  MYSQL_ERROR=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -s -N -D "$1" -e"$2" 2>&1)
+  MYSQL_ERROR=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h"$MYSQL_HOST" -P"$MYSQL_PORT" -s -N -D "$1" -e"$2" 2>&1)
   if [[ $? != 0 ]]; then
     if [ ! -z "$3" ]; then
       echo "FAILED!"
@@ -595,7 +588,7 @@ function execute_sql_file() {
   if [[ "$3" = "" ]]; then showstatus=false; fi
   if [[ "$showstatus" = true ]]; then echo -n "$3 ... "; fi
   export MYSQL_PWD="$MYSQL_PASSWORD"
-  ERRORS=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -s -N -D "$1" <"$2" 2>&1)
+  ERRORS=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h"$MYSQL_HOST" -P"$MYSQL_PORT" -s -N -D "$1" <"$2" 2>&1)
   if [[ $? != 0 ]]; then
     if [[ "$showstatus" = true ]]; then
       echo "FAILED!"
@@ -614,7 +607,6 @@ function show_db_name() {
   echo -e "Character database name.: $CHAR_DB_NAME"
   echo -e "Realm database name.....: $REALM_DB_NAME"
   echo -e "Logs database name......: $LOGS_DB_NAME"
-  echo -e "Playerbots database name: $PLAYERBOTS_DB_NAME"
 }
 
 function show_mysql_settings() {
@@ -629,7 +621,7 @@ function show_mysql_settings() {
   echo -e "LOCALES.................: $LOCALES"
   echo -e "DEV_UPDATES.............: $DEV_UPDATES"
   echo -e "AHBOT...................: $AHBOT"
-  echo -e "BOTS_DB.................: $BOTS_DB"
+  echo -e "PLAYERBOTS_DB...........: $PLAYERBOTS_DB"
 }
 
 # arg1 = arg2 (if arg2 is empty then arg1 = arg3, if arg3 is empty do nothing)
@@ -678,10 +670,10 @@ function change_mysql_settings() {
     read -e -p "Enter core path.................: " -i "$CORE_PATH" CORE_PATH
     change_db_name
     echo -e "Choose YES or NO for following options"
-    read -e -p "LOCALE(default:NO)..............: " -i "$LOCALES" LOCALES
+    read -e -p "LOCALE(default:YES).............: " -i "$LOCALES" LOCALES
     read -e -p "DEV_UPDATES(default:NO).........: " -i "$DEV_UPDATES" DEV_UPDATES
     read -e -p "AHBOT(default:NO)...............: " -i "$AHBOT" AHBOT
-    read -e -p "BOTS_DB(default:YES)............: " -i "$BOTS_DB" BOTS_DB
+    read -e -p "PLAYERBOTS_DB(default:NO).......: " -i "$PLAYERBOTS_DB" PLAYERBOTS_DB
   else
     read -e -p "Enter MySQL host...............current($MYSQL_HOST).: " mhost
     read -e -p "Enter MySQL port...............current($MYSQL_PORT).: " mport
@@ -694,10 +686,10 @@ function change_mysql_settings() {
     read -e -p "Enter core path................current($CORE_PATH).: " cpath
     change_db_name
     echo -e "Choose YES or NO for following options"
-    read -e -p "LOCALE(default:NO).............current($LOCALES).: " loc
+    read -e -p "LOCALE(default:YES).............current($LOCALES).: " loc
     read -e -p "DEV_UPDATES(default:NO)........current($DEV_UPDATES).: " dev
     read -e -p "AHBOT(default:NO)..............current($AHBOT).: " ahb
-    read -e -p "BOTS_DB(default:YES)...........current($BOTS_DB).: " bot
+    read -e -p "PLAYERBOTS_DB(default:NO)......current($PLAYERBOTS_DB).: " bot
 
     assign_new_value 'MYSQL_HOST' "${mhost}"
     assign_new_value 'MYSQL_PORT' "${mport}"
@@ -709,7 +701,7 @@ function change_mysql_settings() {
     assign_new_value 'CORE_PATH' "${cpath}"
     assign_new_value 'LOCALES' "${loc}"
     assign_new_value 'DEV_UPDATES' "${dev}"
-    assign_new_value 'BOTS_DB' "${bot}"
+    assign_new_value 'PLAYERBOTS_DB' "${bot}"
     assign_new_value 'AHBOT' "${ahb}"
   fi
 
@@ -723,7 +715,6 @@ function change_mysql_settings() {
   if [[ "$CHAR_DB_NAME" = "" ]]; then CHAR_DB_NAME="${CHAR_DB_NAME_DEFAULT}"; fi
   if [[ "$REALM_DB_NAME" = "" ]]; then REALM_DB_NAME="${REALM_DB_NAME_DEFAULT}"; fi
   if [[ "$LOGS_DB_NAME" = "" ]]; then LOGS_DB_NAME="${LOGS_DB_NAME_DEFAULT}"; fi
-  if [[ "$PLAYERBOTS_DB_NAME" = "" ]]; then PLAYERBOTS_DB_NAME="${PLAYERBOTS_DB_NAME_DEFAULT}"; fi
   LOCALES="$(tr [a-z] [A-Z] <<<"$LOCALES")"
   DEV_UPDATES="$(tr [a-z] [A-Z] <<<"$DEV_UPDATES")"
   AHBOT="$(tr [a-z] [A-Z] <<<"$AHBOT")"
@@ -768,7 +759,7 @@ function get_current_db_version() {
       CURRENT_LAST_CONTENT_DB_VERSION=$(echo -n "${CURRENT_LAST_CONTENT_DB_VERSION//content_/}") # remove "content_"
       ;;
     esac
-  done < <("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -s -N -e"$sql")
+  done < <("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h"$MYSQL_HOST" -P"$MYSQL_PORT" -s -N -e"$sql")
   IFS="$OLDIFS"
 }
 
@@ -796,7 +787,7 @@ function check_dbs_accessibility() {
   fi
 
   if [[ "$showstatus" = true ]]; then echo -ne "Checking '$WORLD_DB_NAME' db access, please wait..."; fi
-  ERRORS+=($("$MYSQL_PATH" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u$MYSQL_USERNAME -D$WORLD_DB_NAME --connect-timeout=2 -s -e";" 2>&1))
+  ERRORS+=($("$MYSQL_PATH" -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USERNAME -D$WORLD_DB_NAME --connect-timeout=2 -s -e";" 2>&1))
   if [[ $? != 0 ]]; then
     DB_WORLDDB_VERSION="0"
     UNAVAILABLE_DB+=("$WORLD_DB_NAME")
@@ -810,7 +801,7 @@ function check_dbs_accessibility() {
     #select version from db_version;
     sql="SELECT version FROM db_version;"
     #echo "$sql"
-    local result=$("$MYSQL_PATH" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u$MYSQL_USERNAME -D$WORLD_DB_NAME --connect-timeout=2 -sNe"$sql" 2>&1)
+    local result=$("$MYSQL_PATH" -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USERNAME -D$WORLD_DB_NAME --connect-timeout=2 -sNe"$sql" 2>&1)
     if [[ $? != 0 ]]; then
       DB_CONTENT_RELEASE_VERSION=""
     else
@@ -826,7 +817,7 @@ function check_dbs_accessibility() {
     echo -ne "\033[0K\r"
     echo -ne "Checking '$REALM_DB_NAME' db access, please wait...          "
   fi
-  ERRORS+=($("$MYSQL_PATH" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u$MYSQL_USERNAME -D$REALM_DB_NAME --connect-timeout=2 -s -e";" 2>&1))
+  ERRORS+=($("$MYSQL_PATH" -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USERNAME -D$REALM_DB_NAME --connect-timeout=2 -s -e";" 2>&1))
   if [[ $? != 0 ]]; then
     DB_REALMDB_VERSION="0"
     UNAVAILABLE_DB+=("$REALM_DB_NAME")
@@ -841,7 +832,7 @@ function check_dbs_accessibility() {
     echo -ne "\033[0K\r"
     echo -ne "Checking '$CHAR_DB_NAME' db access, please wait...          "
   fi
-  ERRORS+=($("$MYSQL_PATH" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u$MYSQL_USERNAME -D$CHAR_DB_NAME --connect-timeout=2 -s -e";" 2>&1))
+  ERRORS+=($("$MYSQL_PATH" -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USERNAME -D$CHAR_DB_NAME --connect-timeout=2 -s -e";" 2>&1))
   if [[ $? != 0 ]]; then
     DB_CHARDB_VERSION="0"
     UNAVAILABLE_DB+=("$CHAR_DB_NAME")
@@ -856,7 +847,7 @@ function check_dbs_accessibility() {
     echo -ne "\033[0K\r"
     echo -ne "Checking '$LOGS_DB_NAME' db access, please wait...          "
   fi
-  ERRORS+=($("$MYSQL_PATH" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u$MYSQL_USERNAME -D$LOGS_DB_NAME --connect-timeout=2 -s -e";" 2>&1))
+  ERRORS+=($("$MYSQL_PATH" -h$MYSQL_HOST -P$MYSQL_PORT -u$MYSQL_USERNAME -D$LOGS_DB_NAME --connect-timeout=2 -s -e";" 2>&1))
   if [[ $? != 0 ]]; then
     DB_LOGSDB_VERSION="0"
     UNAVAILABLE_DB+=("$LOGS_DB_NAME")
@@ -865,18 +856,6 @@ function check_dbs_accessibility() {
     get_current_db_version "$LOGS_DB_NAME" "logs_db_version"
     DB_LOGSDB_VERSION="$CURRENT_DB_VERSION"
     STATUS_LOGS_DB_FOUND=true
-  fi
-
-  if [[ "$showstatus" = true ]]; then
-    echo -ne "\033[0K\r"
-    echo -ne "Checking '$PLAYERBOTS_DB_NAME' db access, please wait...          "
-  fi
-  ERRORS+=($("$MYSQL_PATH" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -u$MYSQL_USERNAME -D$PLAYERBOTS_DB_NAME --connect-timeout=2 -s -e";" 2>&1))
-  if [[ $? != 0 ]]; then
-    UNAVAILABLE_DB+=("$PLAYERBOTS_DB_NAME")
-  else
-    if [[ "$showstatus" = true ]]; then echo -ne "SUCCESS"; fi
-    STATUS_PLAYERBOTS_DB_FOUND=true
   fi
 
   if [[ "$showstatus" = true ]]; then
@@ -1434,47 +1413,13 @@ function apply_dev_content {
   true
 }
 
-# Apply mangosbot custom sql files
-function apply_mangosbot_custom_db {
-  if [ "$BOTS_DB" != "YES" ]; then
-    true
-    return
-  fi
-
-  echo "> Trying to apply mangosbot custom sql for world db..."
-  for UPDATEFILE in ${CORE_PATH}/sql/custom/mangos/*.sql; do
-    if [ -e "$UPDATEFILE" ]; then
-      local fName=$(basename "$UPDATEFILE")
-      if ! execute_sql_file "$WORLD_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
-        false
-        return
-      fi
-    fi
-  done
-
-  echo "> Trying to apply mangosbot custom sql for characters db..."
-  for UPDATEFILE in ${CORE_PATH}/sql/custom/characters/*.sql; do
-    if [ -e "$UPDATEFILE" ]; then
-      local fName=$(basename "$UPDATEFILE")
-      if ! execute_sql_file "$CHAR_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
-        false
-        return
-      fi
-    fi
-  done
-
-  echo
-  true
-}
-
 # Apply playerbot sql files
 function apply_playerbots_db {
-  if [ "$BOTS_DB" != "YES" ]; then
+  if [ "$PLAYERBOTS_DB" != "YES" ]; then
     true
     return
   fi
 
-  echo "> Trying to apply playerbots expansion specific files..."
   BOT_EXP_PREFIX="classic"
   if [ "$EXPANSION" = "TBC" ]; then
     BOT_EXP_PREFIX="tbc"
@@ -1484,8 +1429,23 @@ function apply_playerbots_db {
   fi
 
   echo "> Trying to apply playerbots sql mods for world db..."
+  echo "  - Applying $CORE_PATH/src/modules/Bots/sql/world/*.sql"
   for UPDATEFILE in ${CORE_PATH}/src/modules/Bots/sql/world/*.sql; do
     if [ -e "$UPDATEFILE" ]; then
+      echo "  - Applying $UPDATEFILE"
+      local fName=$(basename "$UPDATEFILE")
+      if ! execute_sql_file "$WORLD_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
+        false
+        return
+      fi
+    fi
+  done
+
+  echo "> Trying to apply playerbots sql mods for world db (expansion specific)..."
+  echo "  - Applying $CORE_PATH/src/modules/Bots/sql/world/${BOT_EXP_PREFIX}/*.sql"
+  for UPDATEFILE in ${CORE_PATH}/src/modules/Bots/sql/world/${BOT_EXP_PREFIX}/*.sql; do
+    if [ -e "$UPDATEFILE" ]; then
+      echo "  - Applying $UPDATEFILE"
       local fName=$(basename "$UPDATEFILE")
       if ! execute_sql_file "$WORLD_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
         false
@@ -1495,8 +1455,10 @@ function apply_playerbots_db {
   done
 
   echo "> Trying to apply playerbots sql mods for characters db..."
+  echo "  - Applying $CORE_PATH/src/modules/Bots/sql/characters/*.sql"
   for UPDATEFILE in ${CORE_PATH}/src/modules/Bots/sql/characters/*.sql; do
     if [ -e "$UPDATEFILE" ]; then
+      echo "  - Applying $UPDATEFILE"
       local fName=$(basename "$UPDATEFILE")
       if ! execute_sql_file "$CHAR_DB_NAME" "$UPDATEFILE" "  - Applying $fName"; then
         false
@@ -1505,12 +1467,16 @@ function apply_playerbots_db {
     fi
   done
 
-  # echo "> Trying to apply sql merge file..."
-  # if ! execute_sql_file "$PLAYERBOTS_DB_NAME" "${CORE_PATH}/src/modules/Bots/sql/other/database_merge_${BOT_EXP_PREFIX}.sql"; then
-  #   echo "FAILED!"
-  #   echo ">>> $ERRORS"
-  #   false
-  #   return
+  # Seems to crash and be useless
+  # echo "> Apply database merge file for expansion..."
+  # echo "  - Applying ${CORE_PATH}/src/modules/Bots/sql/other/database_merge_${BOT_EXP_PREFIX}.sql"
+  # if [ -e "${CORE_PATH}/src/modules/Bots/sql/other/database_merge_${BOT_EXP_PREFIX}.sql" ]; then
+  #   echo "  - Applying ${CORE_PATH}/src/modules/Bots/sql/other/database_merge_${BOT_EXP_PREFIX}.sql"
+  #   local fName=$(basename "${CORE_PATH}/src/modules/Bots/sql/other/database_merge_${BOT_EXP_PREFIX}.sql")
+  #   if ! execute_sql_file "${CORE_PATH}/src/modules/Bots/sql/other/database_merge_${BOT_EXP_PREFIX}.sql" "  - Applying $fName"; then
+  #     false
+  #     return
+  #   fi
   # fi
 
   echo
@@ -1661,14 +1627,7 @@ function apply_full_content_db() {
     return
   fi
 
-  # Apply playerbots sql
   if ! apply_playerbots_db; then
-    false
-    return
-  fi
-
-  # Apply mangosbot custom sql
-  if ! apply_mangosbot_custom_db; then
     false
     return
   fi
@@ -1677,13 +1636,28 @@ function apply_full_content_db() {
 }
 
 function create_db_user_and_set_privileges() {
+  local sqlcreate=()
+
   if [[ "$1" = true ]]; then
     clear
+  fi
 
-    if [[ "$STATUS_USER_SUCCESS" = true ]]; then
-      echo "Warning: User already exist, you will reset all privileges to default!"
+  if [[ "$STATUS_USER_SUCCESS" = true ]]; then
+    local user_lowCase=$(echo "$MYSQL_USERNAME" | tr '[:upper:]' '[:lower:]')
+    if [ "$user_lowCase" == "root" ]; then
+      echo "Error: 'root' is not supported as an username. Please choose a safer one."
+      false
+      return
     fi
-    if [ ! -z $DB_CHARDB_VERSION ] OR [ ! -z $DB_REALMDB_VERSION ] OR [ ! -z $DB_WORLDDB_VERSION ] OR [ ! -z $DB_LOGSDB_VERSION ]; then
+    if [[ "$1" = true ]]; then
+      echo "Warning: User already exists; only privileges for required database will be added!"
+    fi
+  else
+    sqlcreate+=("$SQL_CREATE_DATABASE_USER")
+  fi
+
+  if [[ "$1" = true ]]; then
+    if [[ ! -z $DB_CHARDB_VERSION ]] || [[ ! -z $DB_REALMDB_VERSION ]] || [[ ! -z $DB_WORLDDB_VERSION ]] || [[ ! -z $DB_LOGSDB_VERSION ]]; then
       echo "Warning: At least one database contains some data that you are about to reset to default!"
     fi
     if ! are_you_sure "CreateAll"; then
@@ -1692,17 +1666,14 @@ function create_db_user_and_set_privileges() {
     fi
   fi
 
-  echo -n "> Creating $MYSQL_USERNAME user in database ... "
-  local sqlcreate=("$SQL_DROP_DATABASE_USER")
-  sqlcreate+=("$SQL_CREATE_DATABASE_USER")
+  echo -n "> Setting $MYSQL_USERNAME user in database ... "
   sqlcreate+=("$SQL_GRANT_TO_WORLD_DATABASE")
   sqlcreate+=("$SQL_GRANT_TO_CHAR_DATABASE")
   sqlcreate+=("$SQL_GRANT_TO_REALM_DATABASE")
   sqlcreate+=("$SQL_GRANT_TO_LOGS_DATABASE")
-  sqlcreate+=("$SQL_GRANT_TO_PLAYERBOTS_DATABASE")
   export MYSQL_PWD="$ROOTPASSWORD"
   for sql in "${sqlcreate[@]}"; do
-    ERRORS=$("$MYSQL_PATH" -u"$ROOTUSERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -s -N -e"$sql" 2>&1)
+    ERRORS=$("$MYSQL_PATH" -u"$ROOTUSERNAME" -h"$MYSQL_HOST" -P"$MYSQL_PORT" -s -N -e"$sql" 2>&1)
     if [[ $? != 0 ]]; then
       echo "FAILED!"
       echo ">>> $ERRORS"
@@ -1724,14 +1695,22 @@ function delete_all_databases_and_user {
     fi
   fi
   echo -n "> Deleting all current cmangos database and current user in database..."
-  local sqlcreate=("$SQL_DROP_DATABASE_USER")
+
+  local sqlcreate=()
+
+  # Check if MYSQL_USERNAME is not 'root' before adding SQL_DROP_DATABASE_USER
+  local user_lowCase=$(echo "$MYSQL_USERNAME" | tr '[:upper:]' '[:lower:]')
+  if [ "$user_lowCase" != "root" ]; then
+    sqlcreate+=("$SQL_DROP_DATABASE_USER")
+  fi
+
   sqlcreate+=("$SQL_DROP_WORLD_DB")
   sqlcreate+=("$SQL_DROP_CHAR_DB")
   sqlcreate+=("$SQL_DROP_REALM_DB")
   sqlcreate+=("$SQL_DROP_LOGS_DB")
   export MYSQL_PWD="$ROOTPASSWORD"
   for sql in "${sqlcreate[@]}"; do
-    ERRORS=$("$MYSQL_PATH" -u"$ROOTUSERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -s -N -e"$sql" 2>&1)
+    ERRORS=$("$MYSQL_PATH" -u"$ROOTUSERNAME" -h"$MYSQL_HOST" -P"$MYSQL_PORT" -s -N -e"$sql" 2>&1)
     if [[ $? != 0 ]]; then
       echo "FAILED!"
       echo ">>> $ERRORS"
@@ -1769,11 +1748,6 @@ function create_database() {
     createSql="$SQL_CREATE_LOGS_DB"
     dropSql="$SQL_DROP_LOGS_DB"
     ;;
-  "PLAYERBOTS")
-    dbname="${PLAYERBOTS_DB_NAME}"
-    createSql="$SQL_CREATE_PLAYERBOTS_DB"
-    dropSql="$SQL_DROP_PLAYERBOTS_DB"
-    ;;
   esac
 
   echo -n "> Creating $dbname database ... "
@@ -1781,7 +1755,7 @@ function create_database() {
   sqlcreate+=("$createSql")
   export MYSQL_PWD="$ROOTPASSWORD"
   for sql in "${sqlcreate[@]}"; do
-    ERRORS=$("$MYSQL_PATH" -u"$ROOTUSERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -s -N -e"$sql" 2>&1)
+    ERRORS=$("$MYSQL_PATH" -u"$ROOTUSERNAME" -h"$MYSQL_HOST" -P"$MYSQL_PORT" -s -N -e"$sql" 2>&1)
     if [[ $? != 0 ]]; then
       echo "FAILED!"
       echo ">>> $ERRORS"
@@ -1833,7 +1807,7 @@ function create_and_fill_char_db() {
     fi
   fi
 
-  if [ "${STATUS_CHAR_DB_FOUND}" -eq true ] AND [ ! -z $DB_CHARDB_VERSION ]; then
+  if [ "${STATUS_CHAR_DB_FOUND}" = true ] && [ ! -z $DB_CHARDB_VERSION ]; then
     backup_create "CHAR"
   fi
 
@@ -1858,7 +1832,7 @@ function create_and_fill_realm_db() {
     fi
   fi
 
-  if [ "${STATUS_REALM_DB_FOUND}" -eq true ] AND [ ! -z $DB_REALMDB_VERSION ]; then
+  if [ "${STATUS_REALM_DB_FOUND}" = true ] && [ ! -z $DB_REALMDB_VERSION ]; then
     backup_create "REALM"
   fi
 
@@ -1897,19 +1871,18 @@ function create_and_fill_logs_db() {
 }
 
 function create_and_fill_playerbots_db() {
-  if [ "$BOTS_DB" != "YES" ]; then
+  echo "Executing playerbots db base sql ..."
+  if [ "$PLAYERBOTS_DB" != "YES" ]; then
     true
     return
   fi
 
   if [[ "$1" = true ]]; then
     clear
-    if ! are_you_sure "Playerbots"; then
+    if ! are_you_sure "Mangosbots"; then
       return
     fi
   fi
-
-  create_database "PLAYERBOTS"
 
   echo "SUCCESS"
 
@@ -1970,7 +1943,7 @@ function print_realm_list() {
   printf "%0.1s" "="{1..80}
   printf "\n"
   export MYSQL_PWD="$MYSQL_PASSWORD"
-  local result=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -s -N -D"$REALM_DB_NAME" -e"$SQL_QUERY_REALM_LIST" 2>&1)
+  local result=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h"$MYSQL_HOST" -P"$MYSQL_PORT" -s -N -D"$REALM_DB_NAME" -e"$SQL_QUERY_REALM_LIST" 2>&1)
   if [[ $? != 0 ]]; then
     echo "Error unable to read realm list"
     echo "$result"
@@ -2223,7 +2196,7 @@ function backup_create() {
 
   echo -ne "> Dumping $dbname ... "
   export MYSQL_PWD="$MYSQL_PASSWORD"
-  ERRORS=$("$MYSQL_DUMP_PATH" -u"$MYSQL_USERNAME" ${dbname} --quick --single-transaction --compress --order-by-primary${MYSQL_COLSTAT} --result-file="${filename}" 2>&1)
+  ERRORS=$("$MYSQL_DUMP_PATH" -u"$MYSQL_USERNAME" -h"$MYSQL_HOST" -P"$MYSQL_PORT" ${dbname} --quick --single-transaction --compress --order-by-primary${MYSQL_COLSTAT} --result-file="${filename}" 2>&1)
   if [[ $? != 0 ]]; then
     echo "FAILED!"
     echo ">>> $ERRORS"
@@ -2324,7 +2297,7 @@ function backup_restore_file() {
   filename=${filename%.gz}
   echo -ne "> Restoring $filename ... "
   export MYSQL_PWD="$MYSQL_PASSWORD"
-  ERRORS=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h "$MYSQL_HOST" -P "$MYSQL_PORT" -D"$dbname" -sN <"$filename" 2>&1)
+  ERRORS=$("$MYSQL_PATH" -u"$MYSQL_USERNAME" -h"$MYSQL_HOST" -P"$MYSQL_PORT" -D"$dbname" -sN <"$filename" 2>&1)
   if [[ $? != 0 ]]; then
     echo "FAILED!"
     echo ">>> $ERRORS"
@@ -2608,6 +2581,7 @@ function advanced_db_install_menu() {
     echo "> 5) Create and fill logs database"
     echo "> 6) Create 'core user' for db and set its default privileges"
     echo "> 7) Delete all databases and users"
+    echo "> 8) Create and fill playerbots db"
     echo "> 9) Return to previous menu"
     echo
     read -n 1 -e -p "Please enter your choice.....: " CHOICE
@@ -2932,10 +2906,6 @@ function auto_script_create_all_db_and_user() {
     false
     return
   fi
-  if ! create_database "PLAYERBOTS"; then
-    false
-    return
-  fi
 
   true
 }
@@ -2958,6 +2928,20 @@ function auto_script_install_world() {
   force_wait
 
   if ! apply_full_content_db; then
+    false
+    return
+  fi
+
+  true
+}
+
+# apply core updates using config file settings and normal user
+function auto_script_apply_core_update() {
+  show_mysql_settings
+  echo
+  echo "Applying all the latest core updates..."
+
+  if ! apply_core_update; then
     false
     return
   fi
@@ -3024,6 +3008,9 @@ function show_help {
   echo "   -World"
   echo "    Install world db only using none root user defined in $CONFIG_FILE"
   echo
+  echo "   -UpdateCore"
+  echo "    Install core updates only using none root user defined in $CONFIG_FILE"
+  echo
   echo "   -InstallAll rootuser rootpass"
   echo "    Install all db by droping previous ones and recreate them from scratch"
   echo "    Require root access with arg1 as root username and arg2 as root password"
@@ -3082,6 +3069,14 @@ fi
 # check if user only want to install world db using config
 if [[ "$1" = "-World" ]]; then
   if ! auto_script_install_world; then
+    exit 1
+  fi
+
+  exit 0
+fi
+# only apply core updates using config
+if [[ "$1" = "-UpdateCore" ]]; then
+  if ! auto_script_apply_core_update; then
     exit 1
   fi
 

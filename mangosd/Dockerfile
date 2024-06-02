@@ -30,7 +30,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     #	  clang \
     git-core \
     libboost-dev \
-    libboost-filesystem-dev \
+    libboost-filesystem-dev \ 
     libboost-program-options-dev \
     libboost-regex-dev \
     libboost-system-dev \
@@ -71,7 +71,7 @@ RUN mkdir -p /opt/cmangos/logs /opt/cmangos/build && \
     # Release build
     #cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DBUILD_LOGIN_SERVER=OFF -DBUILD_GAME_SERVER=ON -DBUILD_ACHIEVEMENTS=ON -DBUILD_AHBOT=ON -DBUILD_GIT_ID=OFF -DBUILD_IKE3_BOTS=ON -DBUILD_PLAYERBOT=ON -DBUILD_SCRIPTDEV=ON -DPCH=ON && \
     # Release with Debug info build
-    cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DBUILD_LOGIN_SERVER=OFF -DBUILD_GAME_SERVER=ON -DBUILD_ACHIEVEMENTS=ON -DBUILD_AHBOT=ON -DBUILD_GIT_ID=OFF -DBUILD_IKE3_BOTS=ON -DBUILD_PLAYERBOT=ON -DBUILD_SCRIPTDEV=ON -DPCH=ON && \
+    cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DPCH=1 -DDEBUG=0 -DBUILD_PLAYERBOTS=ON -DBUILD_AHBOT=${ENV_BUILD_AHBOT} -DBUILD_GIT_ID=ON -DBUILD_MODULES=ON -DBUILD_MODULE_ACHIEVEMENTS=OFF -DBUILD_MODULE_DUALSPEC=ON -DBUILD_MODULE_HARDCORE=OFF -DBUILD_MODULE_IMMERSIVE=ON -DBUILD_MODULE_TRANSMOG=ON -DBUILD_MODULE_BARBER=OFF && \
     # Memory leak debugger build
     #cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_FLAGS="-fsanitize=address,leak -fsanitize-recover=address -O0 -g -Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" -DCMAKE_CXX_FLAGS="-fsanitize=address,leak -fsanitize-recover=address -O0 -g -Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" -DCMAKE_MODULE_LINKER_FLAGS="-fsanitize=address,leak" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DBUILD_LOGIN_SERVER=OFF -DBUILD_GAME_SERVER=ON -DBUILD_ACHIEVEMENTS=ON -DBUILD_AHBOT=ON -DBUILD_GIT_ID=OFF -DBUILD_IKE3_BOTS=ON -DBUILD_PLAYERBOT=ON -DBUILD_SCRIPTDEV=ON -DPCH=ON && \
     make -j$(nproc) && make install
@@ -111,7 +111,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     curl \
     git-core \
     ca-certificates \
-    mariadb-client \
+    mysql-server \
     gdb && \
     rm -rf /var/lib/apt/lists/*
 
