@@ -14,36 +14,36 @@ ENV TZ=Europe/Amsterdam \
 # Update Ubuntu Software repository
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -q -y \
-      autoconf \
-      automake \
-      binutils \
-      build-essential \
-      ca-certificates \
-      cmake \
-      cpp \
-      g++ \
-      gcc \
-      git-core \
-      libboost-dev \
-      libboost-filesystem-dev \
-      libboost-program-options-dev \
-      libboost-regex-dev \
-      libboost-system-dev \
-      libboost-thread-dev \
-      libc6 \
-      libcurl4-openssl-dev \
-      libmysql++-dev \
-      libpthread-stubs0-dev \
-      libssl-dev \
-      libtool \
-      make \
-      openssl \
-      patch \
-      pkg-config \
-      unrar-free \
-      unzip \
-      wget \
-      zlibc && \
+    autoconf \
+    automake \
+    binutils \
+    build-essential \
+    ca-certificates \
+    cmake \
+    cpp \
+    g++ \
+    gcc \
+    git-core \
+    libboost-dev \
+    libboost-filesystem-dev \
+    libboost-program-options-dev \
+    libboost-regex-dev \
+    libboost-system-dev \
+    libboost-thread-dev \
+    libc6 \
+    libcurl4-openssl-dev \
+    libmysql++-dev \
+    libpthread-stubs0-dev \
+    libssl-dev \
+    libtool \
+    make \
+    openssl \
+    patch \
+    pkg-config \
+    unrar-free \
+    unzip \
+    wget \
+    zlibc && \
     rm -rf /var/lib/apt/lists/*
 
 # Prepare new cmake
@@ -55,8 +55,8 @@ RUN cd /tmp && wget --no-check-certificate https://github.com/Kitware/CMake/rele
 
 # Prepare Sources
 RUN mkdir -p /opt/src && \
-    git clone https://github.com/celguar/mangos-classic.git --branch ike3-bots /opt/src/cmangos && \
-	git clone https://github.com/celguar/mangosbot-bots.git /opt/src/cmangos/src/modules/Bots && \
+    git clone https://github.com/cmangos/mangos-classic.git /opt/src/cmangos && \
+    git clone https://github.com/cmangos/playerbots.git /opt/src/cmangos/src/modules/Bots && \
     echo "Core Version: ${ENV_CORE_COMMIT_HASH}" && \
     if [ "$ENV_CORE_COMMIT_HASH" != "HEAD" ]; then echo "Switching to Commit: ${ENV_CORE_COMMIT_HASH}\n"; cd /opt/src/cmangos; git checkout ${ENV_CORE_COMMIT_HASH}; fi
 
@@ -108,8 +108,8 @@ ARG CORE_COMMIT_HASH=HEAD \
 ENV TZ=Europe/Amsterdam \
     ENV_CORE_COMMIT_HASH=$CORE_COMMIT_HASH \
     ENV_DB_COMMIT_HASH=$DB_COMMIT_HASH \
-	DB_SERVER=database \
-	DB_PORT=3306
+    DB_SERVER=database \
+    DB_PORT=3306
 
 # Volume configuration
 VOLUME ["/opt/cmangos/etc"]

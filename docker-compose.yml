@@ -33,7 +33,7 @@ services:
     networks:
       - mangosbot-network
     ports:
-      - 38085:38085
+      - 8085:8085
       - 3443:3443 # Remote Console
       # - 7878:7878 # Enable if you want to use SOAP   
     volumes:

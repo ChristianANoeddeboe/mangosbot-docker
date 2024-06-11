@@ -161,12 +161,12 @@ function initialize_database {
 	# Get latest version
 	rm -rf /tmp/cmangos
 	rm -rf /tmp/db
-	echo "Getting latest cmangos core from https://github.com/celguar/mangos-classic.git --branch ike3-bots..."
-	git clone https://github.com/celguar/mangos-classic.git --branch ike3-bots /tmp/cmangos
-	echo "Getting latest playerbots module from https://github.com/celguar/mangosbot-bots.git..."
-	git clone https://github.com/celguar/mangosbot-bots.git /tmp/cmangos/src/modules/Bots
-	echo "Getting latest database files from https://github.com/celguar/classic-db.git..."
-	git clone https://github.com/celguar/classic-db.git /tmp/db
+	echo "Getting latest cmangos core from https://github.com/cmangos/mangos-classic.git ike3-bots..."
+	git clone https://github.com/cmangos/mangos-classic.git /tmp/cmangos
+	echo "Getting latest playerbots module from https://github.com/cmangos/playerbots.git..."
+	git clone https://github.com/cmangos/playerbots.git /tmp/cmangos/src/modules/Bots
+	echo "Getting latest database files from https://github.com/cmangos/classic-db.git..."
+	git clone https://github.com/cmangos/classic-db.git /tmp/db
 
 	# Create default database structures
 	echo "Create base Characters database"

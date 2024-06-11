@@ -60,8 +60,8 @@ RUN cd /tmp && wget --no-check-certificate https://github.com/Kitware/CMake/rele
 
 # Prepare Sources
 RUN mkdir -p /opt/cmangos && \
-    git clone https://github.com/celguar/mangos-classic.git --branch ike3-bots /opt/cmangos && \
-    git clone https://github.com/celguar/mangosbot-bots.git /opt/cmangos/src/modules/Bots && \
+    git clone https://github.com/cmangos/mangos-classic.git /opt/cmangos && \
+    git clone https://github.com/cmangos/playerbots.git /opt/cmangos/src/modules/Bots && \
     echo "Core Version: ${ENV_CORE_COMMIT_HASH}" && \
     if [ "$ENV_CORE_COMMIT_HASH" != "HEAD" ]; then echo "Switching to Commit: ${ENV_CORE_COMMIT_HASH}\n"; cd /opt/cmangos; git checkout ${ENV_CORE_COMMIT_HASH}; fi
 
