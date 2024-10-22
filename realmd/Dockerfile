@@ -1,5 +1,5 @@
 # Download base image ubuntu
-FROM ubuntu:20.04 AS builder
+FROM ubuntu:22.04 AS builder
 
 # Fetch build arguments
 ARG CORE_COMMIT_HASH=HEAD \
@@ -43,7 +43,7 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     unrar-free \
     unzip \
     wget \
-    zlibc && \
+    zlib1g-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Prepare new cmake
@@ -70,30 +70,30 @@ RUN mkdir -p /opt/cmangos/logs /opt/src/cmangos/build && \
 RUN rm -rfv /opt/src
 
 # Download base image ubuntu
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 # Install dependencies for running CMaNGOSd.
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -q -y \
     binutils \
     libboost-dev \
-    libboost-filesystem1.71.0 \
-    libboost-program-options1.71.0 \
-    libboost-regex1.71.0 \
-    libboost-system1.71.0 \
-    libboost-thread1.71.0 \
+    libboost-filesystem-dev \
+    libboost-program-options-dev \
+    libboost-regex-dev \
+    libboost-system-dev \
+    libboost-thread-dev \
     libc6 \
     libcurl4 \
     libmysql++3v5 \
     libpthread-stubs0-dev \
-    libssl1.1 \
+    libssl-dev \
     libtool \
     openssl \
     pkg-config \
     tzdata \
     unrar-free \
     unzip \
-    zlibc && \
+    zlib1g-dev && \
     rm -rf /var/lib/apt/lists/*
 
 # Copy over data

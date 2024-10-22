@@ -1,5 +1,5 @@
 # Download base image ubuntu
-FROM ubuntu:20.04 AS builder
+FROM ubuntu:22.04 AS builder
 
 # Fetch build arguments
 ARG CORE_COMMIT_HASH=HEAD \
@@ -15,41 +15,59 @@ ENV TZ=Europe/Amsterdam \
     ENV_BUILD_PLAYERBOT=$BUILD_PLAYERBOT \
     CMAKE_VERSION=3.24.2
 
+# Write out environment variables
+RUN echo "ENV_CORE_COMMIT_HASH=$ENV_CORE_COMMIT_HASH" && \
+    echo "ENV_DB_COMMIT_HASH=$ENV_DB_COMMIT_HASH" && \
+    echo "ENV_BUILD_AHBOT=$ENV_BUILD_AHBOT" && \    
+    echo "ENV_BUILD_PLAYERBOT=$ENV_BUILD_PLAYERBOT"
+
+# Stop if ENV_BUILD_AHBOT or ENV_BUILD_PLAYERBOT is not set
+RUN if [ "$ENV_BUILD_AHBOT" != "ON" ] && [ "$ENV_BUILD_PLAYERBOT" != "ON" ]; then exit 1; fi
+
+
 # Update Ubuntu Software repository
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -q -y \
-    autoconf \
-    automake \
-    binutils \
-    build-essential \
-    ca-certificates \
-    cmake \
-    cpp \
-    g++ \
-    gcc \
-    #	  clang \
-    git-core \
-    libboost-dev \
-    libboost-filesystem-dev \ 
-    libboost-program-options-dev \
-    libboost-regex-dev \
-    libboost-system-dev \
-    libboost-thread-dev \
-    libc6 \
-    libcurl4-openssl-dev \
-    libmysql++-dev \
-    libpthread-stubs0-dev \
-    libssl-dev \
-    libtool \
-    make \
-    openssl \
-    patch \
-    pkg-config \
-    unrar-free \
-    unzip \
-    wget \
-    zlibc && \
-    rm -rf /var/lib/apt/lists/*
+    # Essential for building with cmake
+    build-essential gcc g++ automake git-core autoconf make patch libmysql++-dev mysql-server libtool libssl-dev grep binutils zlib1g-dev libbz2-dev cmake libboost-all-dev \
+    # Essential for working with files
+    wget unzip ca-certificates \
+    # autoconf \
+    # automake \
+    # binutils \
+    # build-essential \
+    # ca-certificates \
+    # cmake \
+    # cpp \
+    # g++ \
+    # gcc \
+    # #	  clang \
+    # git-core \
+    # libboost-dev \
+    # libboost-filesystem-dev \ 
+    # libboost-program-options-dev \
+    # libboost-regex-dev \
+    # libboost-system-dev \
+    # libboost-thread-dev \
+    # libc6 \
+    # libcurl4-openssl-dev \
+    # libmysql++-dev \
+    # libpthread-stubs0-dev \
+    # libssl-dev \
+    # libtool \
+    # make \
+    # openssl \
+    # patch \
+    # pkg-config \
+    # unrar-free \
+    # unzip \
+    # wget \
+    # zlibc && \
+    && rm -rf /var/lib/apt/lists/*
+
+# Temporary fix for broken GCC
+RUN apt-get update && apt-get -y install g++-12 && \
+    update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 12 --slave /usr/bin/g++ g++ /usr/bin/g++-12
 
 # Prepare new cmake
 RUN cd /tmp && wget --no-check-certificate https://github.com/Kitware/CMake/releases/download/v${CMAKE_VERSION}/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz && \
@@ -66,15 +84,27 @@ RUN mkdir -p /opt/cmangos && \
     if [ "$ENV_CORE_COMMIT_HASH" != "HEAD" ]; then echo "Switching to Commit: ${ENV_CORE_COMMIT_HASH}\n"; cd /opt/cmangos; git checkout ${ENV_CORE_COMMIT_HASH}; fi
 
 # Build Software
-RUN mkdir -p /opt/cmangos/logs /opt/cmangos/build && \
-    cd /opt/cmangos/build && \
+RUN mkdir -p /opt/cmangos/logs /opt/cmangos/build
+
+RUN cd /opt/cmangos/build && \
     # Release build
-    #cmake .. -DCMAKE_BUILD_TYPE=Release -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DBUILD_LOGIN_SERVER=OFF -DBUILD_GAME_SERVER=ON -DBUILD_ACHIEVEMENTS=ON -DBUILD_AHBOT=ON -DBUILD_GIT_ID=OFF -DBUILD_IKE3_BOTS=ON -DBUILD_PLAYERBOT=ON -DBUILD_SCRIPTDEV=ON -DPCH=ON && \
-    # Release with Debug info build
-    cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DPCH=1 -DDEBUG=0 -DBUILD_PLAYERBOTS=ON -DBUILD_AHBOT=${ENV_BUILD_AHBOT} -DBUILD_GIT_ID=ON -DBUILD_MODULES=ON -DBUILD_MODULE_ACHIEVEMENTS=OFF -DBUILD_MODULE_DUALSPEC=ON -DBUILD_MODULE_HARDCORE=OFF -DBUILD_MODULE_IMMERSIVE=ON -DBUILD_MODULE_TRANSMOG=ON -DBUILD_MODULE_BARBER=OFF && \
-    # Memory leak debugger build
-    #cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_FLAGS="-fsanitize=address,leak -fsanitize-recover=address -O0 -g -Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" -DCMAKE_CXX_FLAGS="-fsanitize=address,leak -fsanitize-recover=address -O0 -g -Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" -DCMAKE_MODULE_LINKER_FLAGS="-fsanitize=address,leak" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DBUILD_LOGIN_SERVER=OFF -DBUILD_GAME_SERVER=ON -DBUILD_ACHIEVEMENTS=ON -DBUILD_AHBOT=ON -DBUILD_GIT_ID=OFF -DBUILD_IKE3_BOTS=ON -DBUILD_PLAYERBOT=ON -DBUILD_SCRIPTDEV=ON -DPCH=ON && \
-    make -j$(nproc) && make install
+    cmake /opt/cmangos -DCMAKE_BUILD_TYPE=Release \ 
+    # -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" \
+    # -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" \
+    -DCMAKE_INSTALL_PREFIX=/opt/cmangos \
+    -DBUILD_LOGIN_SERVER=OFF \
+    -DBUILD_GAME_SERVER=ON \
+    -DBUILD_ACHIEVEMENTS=OFF \
+    -DBUILD_AHBOT=OFF \
+    -DBUILD_GIT_ID=OFF \
+    -DBUILD_PLAYERBOT=ON \
+    -DBUILD_SCRIPTDEV=ON \
+    -DPCH=ON
+# Release with Debug info build
+# cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DPCH=1 -DDEBUG=0 -DBUILD_PLAYERBOTS=ON -DBUILD_AHBOT=${ENV_BUILD_AHBOT} -DBUILD_GIT_ID=ON -DBUILD_MODULES=ON -DBUILD_MODULE_ACHIEVEMENTS=OFF -DBUILD_MODULE_DUALSPEC=ON -DBUILD_MODULE_HARDCORE=OFF -DBUILD_MODULE_IMMERSIVE=ON -DBUILD_MODULE_TRANSMOG=ON -DBUILD_MODULE_BARBER=OFF && \
+# Memory leak debugger build
+#cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_FLAGS="-fsanitize=address,leak -fsanitize-recover=address -O0 -g -Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" -DCMAKE_CXX_FLAGS="-fsanitize=address,leak -fsanitize-recover=address -O0 -g -Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" -DCMAKE_MODULE_LINKER_FLAGS="-fsanitize=address,leak" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DBUILD_LOGIN_SERVER=OFF -DBUILD_GAME_SERVER=ON -DBUILD_ACHIEVEMENTS=ON -DBUILD_AHBOT=ON -DBUILD_GIT_ID=OFF -DBUILD_IKE3_BOTS=ON -DBUILD_PLAYERBOT=ON -DBUILD_SCRIPTDEV=ON -DPCH=ON && \
+RUN cd /opt/cmangos/build && make -j$(nproc) && make install
 
 # Save current repository version used into a file
 RUN cd /opt/cmangos && \
@@ -152,7 +182,7 @@ COPY scripts/wait-for-it.sh /opt/cmangos/scripts/wait-for-it.sh
 RUN chmod +x /opt/cmangos/scripts/mangosd.sh && chmod +x /opt/cmangos/scripts/wait-for-it.sh
 
 # Prepare tini init
-ENV TINI_VERSION v0.19.0
+ENV TINI_VERSION=v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 RUN chmod +x /tini
 ENTRYPOINT ["/tini", "--"]
