@@ -92,7 +92,7 @@ RUN cd /opt/cmangos/build && \
     # -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" \
     # -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" \
     -DCMAKE_INSTALL_PREFIX=/opt/cmangos \
-    -BUILD_EXTRACTORS=${BUILD_EXTRACTORS} \
+    -DBUILD_EXTRACTORS=${BUILD_EXTRACTORS} \
     -DBUILD_LOGIN_SERVER=OFF \
     -DBUILD_GAME_SERVER=ON \
     -DBUILD_ACHIEVEMENTS=OFF \
