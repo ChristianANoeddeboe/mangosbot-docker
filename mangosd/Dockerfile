@@ -4,26 +4,26 @@ FROM ubuntu:22.04 AS builder
 # Fetch build arguments
 ARG CORE_COMMIT_HASH=HEAD \
     DB_COMMIT_HASH=HEAD \
-    BUILD_AHBOT=ON \
-    BUILD_PLAYERBOT=ON
+    BUILD_AHBOT=OFF \
+    BUILD_PLAYERBOT=OFF \
+    BUILD_EXTRACTORS=OFF
+
+# Write out build arguments
+RUN echo "CORE_COMMIT_HASH=$CORE_COMMIT_HASH" && \
+    echo "DB_COMMIT_HASH=$DB_COMMIT_HASH" && \
+    echo "BUILD_AHBOT=$BUILD_AHBOT" && \
+    echo "BUILD_PLAYERBOT=$BUILD_PLAYERBOT" && \
+    echo "BUILD_EXTRACTORS=$BUILD_EXTRACTORS"
 
 # Set Timezone
 ENV TZ=Europe/Amsterdam \
     ENV_CORE_COMMIT_HASH=$CORE_COMMIT_HASH \
     ENV_DB_COMMIT_HASH=$DB_COMMIT_HASH \
-    ENV_BUILD_AHBOT=$BUILD_AHBOT \
-    ENV_BUILD_PLAYERBOT=$BUILD_PLAYERBOT \
     CMAKE_VERSION=3.24.2
 
 # Write out environment variables
 RUN echo "ENV_CORE_COMMIT_HASH=$ENV_CORE_COMMIT_HASH" && \
-    echo "ENV_DB_COMMIT_HASH=$ENV_DB_COMMIT_HASH" && \
-    echo "ENV_BUILD_AHBOT=$ENV_BUILD_AHBOT" && \    
-    echo "ENV_BUILD_PLAYERBOT=$ENV_BUILD_PLAYERBOT"
-
-# Stop if ENV_BUILD_AHBOT or ENV_BUILD_PLAYERBOT is not set
-RUN if [ "$ENV_BUILD_AHBOT" != "ON" ] && [ "$ENV_BUILD_PLAYERBOT" != "ON" ]; then exit 1; fi
-
+    echo "ENV_DB_COMMIT_HASH=$ENV_DB_COMMIT_HASH"
 
 # Update Ubuntu Software repository
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
@@ -92,12 +92,13 @@ RUN cd /opt/cmangos/build && \
     # -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" \
     # -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" \
     -DCMAKE_INSTALL_PREFIX=/opt/cmangos \
+    -BUILD_EXTRACTORS=${BUILD_EXTRACTORS} \
     -DBUILD_LOGIN_SERVER=OFF \
     -DBUILD_GAME_SERVER=ON \
     -DBUILD_ACHIEVEMENTS=OFF \
-    -DBUILD_AHBOT=OFF \
+    -DBUILD_AHBOT=${BUILD_AHBOT} \
     -DBUILD_GIT_ID=OFF \
-    -DBUILD_PLAYERBOT=ON \
+    -DBUILD_PLAYERBOT=${BUILD_PLAYERBOT} \
     -DBUILD_SCRIPTDEV=ON \
     -DPCH=ON
 # Release with Debug info build
