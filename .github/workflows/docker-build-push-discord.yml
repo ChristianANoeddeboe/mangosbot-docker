@@ -83,6 +83,7 @@ jobs:
           cache-to: type=gha,mode=max
 
       - name: Discord notification - Success
+        if: success()
         uses: appleboy/discord-action@master
         with:
           webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
@@ -98,12 +99,6 @@ jobs:
             **Images Built:**
             • MangosD: `${{ env.DOCKERHUB_USERNAME }}/${{ env.MANGOSD_IMAGE_NAME }}:${{ env.VERSION }}`
             • RealmD: `${{ env.DOCKERHUB_USERNAME }}/${{ env.REALMD_IMAGE_NAME }}:${{ env.VERSION }}`
-
-            **Tags Created:**
-            ${{ join(steps.meta-mangosd.outputs.tags, '\n') }}
-
-            **Release Notes:**
-            ${{ github.event.release.body || 'No release notes available' }}
 
             **Build Link:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
