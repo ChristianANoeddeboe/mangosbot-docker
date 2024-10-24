@@ -75,7 +75,7 @@ jobs:
         with:
           context: .
           file: ./mangosd/Dockerfile
-          build-args: BUILD_PLAYERBOT=ON
+          build-args: BUILD_PLAYERBOT=ON BUILD_AHBOT=ON
           push: true
           tags: ${{ steps.meta-mangosd.outputs.tags }}
           labels: ${{ steps.meta-mangosd.outputs.labels }}
