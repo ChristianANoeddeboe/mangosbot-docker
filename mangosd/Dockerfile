@@ -29,41 +29,53 @@ RUN echo "ENV_CORE_COMMIT_HASH=$ENV_CORE_COMMIT_HASH" && \
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -q -y \
     # Essential for building with cmake
-    build-essential gcc g++ automake git-core autoconf make patch libmysql++-dev mysql-server libtool libssl-dev grep binutils zlib1g-dev libbz2-dev cmake libboost-all-dev \
+    build-essential \
+    gcc \
+    g++ \
+    automake \
+    git-core \
+    autoconf \
+    make \
+    patch \
+    libmysql++-dev \
+    mysql-server \
+    libtool \
+    libssl-dev \
+    libssl3 \
+    grep \
+    binutils \
+    zlib1g-dev \
+    libbz2-dev \
+    cmake \
+    libboost-all-dev \
     # Essential for working with files
-    wget unzip ca-certificates \
-    # autoconf \
-    # automake \
-    # binutils \
-    # build-essential \
-    # ca-certificates \
-    # cmake \
-    # cpp \
-    # g++ \
-    # gcc \
-    # #	  clang \
-    # git-core \
-    # libboost-dev \
-    # libboost-filesystem-dev \ 
-    # libboost-program-options-dev \
-    # libboost-regex-dev \
-    # libboost-system-dev \
-    # libboost-thread-dev \
-    # libc6 \
-    # libcurl4-openssl-dev \
-    # libmysql++-dev \
-    # libpthread-stubs0-dev \
-    # libssl-dev \
-    # libtool \
-    # make \
-    # openssl \
-    # patch \
-    # pkg-config \
-    # unrar-free \
-    # unzip \
-    # wget \
-    # zlibc && \
-    && rm -rf /var/lib/apt/lists/*
+    wget \
+    unzip \
+    ca-certificates \
+    # Essential for running the server
+    libmysqlclient21 \
+    libreadline8 \
+    libncurses6 \ 
+    && apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# cpp \
+# #	  clang \
+# libboost-dev \
+# libboost-filesystem-dev \ 
+# libboost-program-options-dev \
+# libboost-regex-dev \
+# libboost-system-dev \
+# libboost-thread-dev \
+# libc6 \
+# libcurl4-openssl-dev \
+# libpthread-stubs0-dev \
+# make \
+# openssl \
+# patch \
+# pkg-config \
+# unrar-free \
+# zlibc && \
 
 # Temporary fix for broken GCC
 RUN apt-get update && apt-get -y install g++-12 && \
