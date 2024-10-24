@@ -47,6 +47,12 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     zlib1g-dev \
     libbz2-dev \
     cmake \
+    libboost-dev \
+    libboost-filesystem-dev \ 
+    libboost-program-options-dev \
+    libboost-regex-dev \
+    libboost-system-dev \
+    libboost-thread-dev \
     libboost-all-dev \
     # Essential for working with files
     wget \
@@ -56,26 +62,18 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     libmysqlclient21 \
     libreadline8 \
     libncurses6 \ 
+    libc6 \
+    libcurl4-openssl-dev \
+    libpthread-stubs0-dev \
+    openssl \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
 # cpp \
 # #	  clang \
-# libboost-dev \
-# libboost-filesystem-dev \ 
-# libboost-program-options-dev \
-# libboost-regex-dev \
-# libboost-system-dev \
-# libboost-thread-dev \
-# libc6 \
-# libcurl4-openssl-dev \
-# libpthread-stubs0-dev \
-# make \
-# openssl \
 # patch \
 # pkg-config \
 # unrar-free \
-# zlibc && \
 
 # Temporary fix for broken GCC
 RUN apt-get update && apt-get -y install g++-12 && \
@@ -126,30 +124,25 @@ RUN cd /opt/cmangos && \
     git rev-parse HEAD > /opt/cmangos/bin/mangosbot_version.txt
 
 # Download base image ubuntu
-FROM ubuntu:20.04
+FROM ubuntu:22.04
 
 # Install dependencies for running CMaNGOSd.
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     DEBIAN_FRONTEND=noninteractive apt-get install --no-install-recommends -q -y \
     binutils \
-    libboost-dev \
-    libboost-filesystem1.71.0 \
-    libboost-program-options1.71.0 \
-    libboost-regex1.71.0 \
-    libboost-system1.71.0 \
-    libboost-thread1.71.0 \
+    libboost-all-dev \
     libc6 \
     libcurl4 \
     libmysql++3v5 \
     libpthread-stubs0-dev \
-    libssl1.1 \
+    libssl3 \
     libtool \
     openssl \
     pkg-config \
     tzdata \
     unrar-free \
     unzip \
-    zlibc \
+    zlib1g-dev \
     openssh-server \
     curl \
     git-core \
