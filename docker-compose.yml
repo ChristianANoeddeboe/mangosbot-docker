@@ -29,6 +29,9 @@ services:
     build:
       context: .
       dockerfile: ./mangosd/Dockerfile
+      args:
+        - BUILD_AHBOT=ON
+        - BUILD_PLAYERBOT=ON
     container_name: mangosbot-mangosd
     networks:
       - mangosbot-network
