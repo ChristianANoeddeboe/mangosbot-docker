@@ -1,12 +1,11 @@
 # Download base image ubuntu
 FROM ubuntu:22.04 AS builder
 
-# Fetch build arguments
-ARG CORE_COMMIT_HASH=HEAD \
-    DB_COMMIT_HASH=HEAD \
-    BUILD_AHBOT=OFF \
-    BUILD_PLAYERBOT=OFF \
-    BUILD_EXTRACTORS=OFF
+ARG CORE_COMMIT_HASH
+ARG DB_COMMIT_HASH
+ARG BUILD_AHBOT=OFF
+ARG BUILD_PLAYERBOT=OFF
+ARG BUILD_EXTRACTORS=OFF
 
 # Write out build arguments
 RUN echo "CORE_COMMIT_HASH=$CORE_COMMIT_HASH" && \
@@ -98,17 +97,15 @@ RUN mkdir -p /opt/cmangos/logs /opt/cmangos/build
 
 RUN cd /opt/cmangos/build && \
     # Release build
-    cmake /opt/cmangos -DCMAKE_BUILD_TYPE=Release \ 
-    # -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" \
-    # -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" \
+    cmake /opt/cmangos -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/opt/cmangos \
     -DBUILD_EXTRACTORS=${BUILD_EXTRACTORS} \
+    -DBUILD_AHBOT=${BUILD_AHBOT} \
+    -DBUILD_PLAYERBOT=${BUILD_PLAYERBOT} \
     -DBUILD_LOGIN_SERVER=OFF \
     -DBUILD_GAME_SERVER=ON \
     -DBUILD_ACHIEVEMENTS=OFF \
-    -DBUILD_AHBOT=${BUILD_AHBOT} \
     -DBUILD_GIT_ID=OFF \
-    -DBUILD_PLAYERBOT=${BUILD_PLAYERBOT} \
     -DBUILD_SCRIPTDEV=ON \
     -DPCH=ON
 # Release with Debug info build
