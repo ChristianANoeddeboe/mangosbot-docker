@@ -5,13 +5,19 @@ volumes:
 
 services:
   db:
-    image: linuxserver/mariadb
+    image: linuxserver/mariadb:latest
     container_name: mangosbot-db
     environment:
-      PUID: 1028
-      PGID: 65537
       TZ: Europe/London
       MYSQL_ROOT_PASSWORD: mangos
+      MYSQL_MAX_CONNECTIONS: 500
+      MYSQL_INNODB_BUFFER_POOL_SIZE: 1G
+      MYSQL_INNODB_LOG_FILE_SIZE: 256M
+      MYSQL_INNODB_FLUSH_METHOD: O_DIRECT
+      # Add these for connection stability
+      MYSQL_WAIT_TIMEOUT: 28800
+      MYSQL_INTERACTIVE_TIMEOUT: 28800
+      MYSQL_MAX_ALLOWED_PACKET: 128M
     volumes:
       - "./db:/config"
     networks:
@@ -20,18 +26,27 @@ services:
       - 33307:3306
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p$$MYSQL_ROOT_PASSWORD || exit 1"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
+      test: 
+        - "CMD"
+        - "/usr/bin/mysqladmin"
+        - "ping"
+        - "-h"
+        - "localhost"
+        - "-u"
+        - "root"
+        - "-p$$MYSQL_ROOT_PASSWORD"
+      interval: 30s
+      timeout: 30s
+      retries: 3
+      start_period: 60s
         
   mangosd:
-    build:
-      context: .
-      dockerfile: ./mangosd/Dockerfile
-      args:
-        - BUILD_AHBOT=ON
-        - BUILD_PLAYERBOT=ON
+    # build:
+    #   context: .
+    #   dockerfile: ./mangosd/Dockerfile
+    #   args:
+    #     - BUILD_PLAYERBOT=ON
+    image: angercraft/mangosbot-mangosd
     container_name: mangosbot-mangosd
     networks:
       - mangosbot-network
@@ -73,9 +88,10 @@ services:
         condition: service_healthy
 
   realmd:
-    build:
-      context: .
-      dockerfile: ./realmd/Dockerfile
+    # build:
+    #   context: .
+    #   dockerfile: ./realmd/Dockerfile
+    image: angercraft/mangosbot-realmd
     container_name: mangosbot-realmd
     networks:
       - mangosbot-network
