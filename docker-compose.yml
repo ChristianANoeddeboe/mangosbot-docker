@@ -6,7 +6,7 @@ volumes:
 services:
   db:
     image: linuxserver/mariadb:latest
-    container_name: mangosbot-db
+    container_name: cmangos-db
     environment:
       TZ: Europe/London
       MYSQL_ROOT_PASSWORD: mangos
@@ -47,7 +47,7 @@ services:
     #   args:
     #     - BUILD_PLAYERBOT=ON
     image: angercraft/mangosbot-mangosd
-    container_name: mangosbot-mangosd
+    container_name: cmangos-classic-mangosd
     networks:
       - mangosbot-network
     ports:
@@ -73,7 +73,7 @@ services:
       MANGOSD_DB: classicmangos
       REALMD_DB: classicrealmd
       PLAYERBOTS_DB: classicplayerbots
-      DB_SERVER: mangosbot-db
+      DB_SERVER: cmangos-db
       DB_ROOT_USER: root
       DB_ROOT_PASS: mangos
       DB_PORT: 3306
@@ -92,7 +92,7 @@ services:
     #   context: .
     #   dockerfile: ./realmd/Dockerfile
     image: angercraft/mangosbot-realmd
-    container_name: mangosbot-realmd
+    container_name: cmangos-classic-realmd
     networks:
       - mangosbot-network
     ports:
@@ -111,7 +111,7 @@ services:
       REALMD_DB: classicrealmd
       DB_USER: mangos
       DB_PASS: mangos
-      DB_SERVER: mangosbot-db
+      DB_SERVER: cmangos-db
       DB_PORT: 3306
 
 networks:
