@@ -1,28 +1,9 @@
 # Download base image ubuntu
-FROM ubuntu:22.04 AS builder
+FROM ubuntu:22.04 AS base
 
-ARG CORE_COMMIT_HASH
-ARG DB_COMMIT_HASH
-ARG BUILD_AHBOT=OFF
-ARG BUILD_PLAYERBOT=OFF
-ARG BUILD_EXTRACTORS=OFF
+ENV CMAKE_VERSION=3.24.2
 
-# Write out build arguments
-RUN echo "CORE_COMMIT_HASH=$CORE_COMMIT_HASH" && \
-    echo "DB_COMMIT_HASH=$DB_COMMIT_HASH" && \
-    echo "BUILD_AHBOT=$BUILD_AHBOT" && \
-    echo "BUILD_PLAYERBOT=$BUILD_PLAYERBOT" && \
-    echo "BUILD_EXTRACTORS=$BUILD_EXTRACTORS"
-
-# Set Timezone
-ENV TZ=Europe/Amsterdam \
-    ENV_CORE_COMMIT_HASH=$CORE_COMMIT_HASH \
-    ENV_DB_COMMIT_HASH=$DB_COMMIT_HASH \
-    CMAKE_VERSION=3.24.2
-
-# Write out environment variables
-RUN echo "ENV_CORE_COMMIT_HASH=$ENV_CORE_COMMIT_HASH" && \
-    echo "ENV_DB_COMMIT_HASH=$ENV_DB_COMMIT_HASH"
+RUN echo "ENV_CMAKE_VERSION=$CMAKE_VERSION"
 
 # Update Ubuntu Software repository
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
@@ -68,12 +49,6 @@ RUN DEBIAN_FRONTEND=noninteractive apt-get update && \
     && apt-get clean && \
     rm -rf /var/lib/apt/lists/*
 
-# cpp \
-# #	  clang \
-# patch \
-# pkg-config \
-# unrar-free \
-
 # Temporary fix for broken GCC
 RUN apt-get update && apt-get -y install g++-12 && \
     update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-12 12 --slave /usr/bin/g++ g++ /usr/bin/g++-12
@@ -85,18 +60,49 @@ RUN cd /tmp && wget --no-check-certificate https://github.com/Kitware/CMake/rele
     ln -s /opt/cmake/bin/* /usr/local/bin/ && \
     rm -f /tmp/cmake-${CMAKE_VERSION}-linux-x86_64.tar.gz
 
+FROM base AS builder
+
+ARG CORE_COMMIT_HASH
+ARG DB_COMMIT_HASH
+ARG BUILD_AHBOT=OFF
+ARG BUILD_PLAYERBOT=OFF
+ARG BUILD_EXTRACTORS=OFF
+ARG CMAKE_FLAGS=""
+# Write out build arguments
+RUN echo "CORE_COMMIT_HASH=$CORE_COMMIT_HASH" && \
+    echo "DB_COMMIT_HASH=$DB_COMMIT_HASH" && \
+    echo "BUILD_AHBOT=$BUILD_AHBOT" && \
+    echo "BUILD_PLAYERBOT=$BUILD_PLAYERBOT" && \
+    echo "BUILD_EXTRACTORS=$BUILD_EXTRACTORS" && \
+    echo "CMAKE_FLAGS=$CMAKE_FLAGS"
+
+# Set Timezone
+ENV TZ=Europe/Amsterdam
+ENV ENV_CORE_COMMIT_HASH=$CORE_COMMIT_HASH
+ENV ENV_DB_COMMIT_HASH=$DB_COMMIT_HASH
+ENV ENV_CMAKE_FLAGS=$CMAKE_FLAGS
+
+# Write out environment variables
+RUN echo "ENV_CORE_COMMIT_HASH=$ENV_CORE_COMMIT_HASH" && \
+    echo "ENV_DB_COMMIT_HASH=$ENV_DB_COMMIT_HASH" && \
+    echo "ENV_BUILD_AHBOT=$BUILD_AHBOT" && \
+    echo "ENV_BUILD_PLAYERBOT=$BUILD_PLAYERBOT" && \
+    echo "ENV_CMAKE_FLAGS=$ENV_CMAKE_FLAGS"
+
 # Prepare Sources
 RUN mkdir -p /opt/cmangos && \
-    git clone https://github.com/cmangos/mangos-classic.git /opt/cmangos && \
+    git clone https://github.com/cmangos/mangos-classic.git --branch latest /opt/cmangos && \
     git clone https://github.com/cmangos/playerbots.git /opt/cmangos/src/modules/Bots && \
     echo "Core Version: ${ENV_CORE_COMMIT_HASH}" && \
     if [ "$ENV_CORE_COMMIT_HASH" != "HEAD" ]; then echo "Switching to Commit: ${ENV_CORE_COMMIT_HASH}\n"; cd /opt/cmangos; git checkout ${ENV_CORE_COMMIT_HASH}; fi
+
+# Print out CMAKE flags
+RUN echo "Final CMAKE_FLAGS before build: $CMAKE_FLAGS"
 
 # Build Software
 RUN mkdir -p /opt/cmangos/logs /opt/cmangos/build
 
 RUN cd /opt/cmangos/build && \
-    # Release build
     cmake /opt/cmangos -DCMAKE_BUILD_TYPE=Release \
     -DCMAKE_INSTALL_PREFIX=/opt/cmangos \
     -DBUILD_EXTRACTORS=${BUILD_EXTRACTORS} \
@@ -107,7 +113,8 @@ RUN cd /opt/cmangos/build && \
     -DBUILD_ACHIEVEMENTS=OFF \
     -DBUILD_GIT_ID=OFF \
     -DBUILD_SCRIPTDEV=ON \
-    -DPCH=ON
+    -DPCH=ON \
+    $ENV_CMAKE_FLAGS
 # Release with Debug info build
 # cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DPCH=1 -DDEBUG=0 -DBUILD_PLAYERBOTS=ON -DBUILD_AHBOT=${ENV_BUILD_AHBOT} -DBUILD_GIT_ID=ON -DBUILD_MODULES=ON -DBUILD_MODULE_ACHIEVEMENTS=OFF -DBUILD_MODULE_DUALSPEC=ON -DBUILD_MODULE_HARDCORE=OFF -DBUILD_MODULE_IMMERSIVE=ON -DBUILD_MODULE_TRANSMOG=ON -DBUILD_MODULE_BARBER=OFF && \
 # Memory leak debugger build
@@ -121,7 +128,7 @@ RUN cd /opt/cmangos && \
     git rev-parse HEAD > /opt/cmangos/bin/mangosbot_version.txt
 
 # Download base image ubuntu
-FROM ubuntu:22.04
+FROM ubuntu:22.04 AS runner
 
 # Install dependencies for running CMaNGOSd.
 RUN DEBIAN_FRONTEND=noninteractive apt-get update && \

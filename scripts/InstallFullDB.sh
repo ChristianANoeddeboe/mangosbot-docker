@@ -1429,8 +1429,8 @@ function apply_playerbots_db {
   fi
 
   echo "> Trying to apply playerbots sql mods for world db..."
-  echo "  - Applying $CORE_PATH/src/modules/Bots/sql/world/*.sql"
-  for UPDATEFILE in ${CORE_PATH}/src/modules/Bots/sql/world/*.sql; do
+  echo "  - Applying $CORE_PATH/src/modules/PlayerBots/sql/world/*.sql"
+  for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/world/*.sql; do
     if [ -e "$UPDATEFILE" ]; then
       echo "  - Applying $UPDATEFILE"
       local fName=$(basename "$UPDATEFILE")
@@ -1443,7 +1443,7 @@ function apply_playerbots_db {
 
   echo "> Trying to apply playerbots sql mods for world db (expansion specific)..."
   echo "  - Applying $CORE_PATH/src/modules/Bots/sql/world/${BOT_EXP_PREFIX}/*.sql"
-  for UPDATEFILE in ${CORE_PATH}/src/modules/Bots/sql/world/${BOT_EXP_PREFIX}/*.sql; do
+  for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/world/${BOT_EXP_PREFIX}/*.sql; do
     if [ -e "$UPDATEFILE" ]; then
       echo "  - Applying $UPDATEFILE"
       local fName=$(basename "$UPDATEFILE")
@@ -1456,7 +1456,7 @@ function apply_playerbots_db {
 
   echo "> Trying to apply playerbots sql mods for characters db..."
   echo "  - Applying $CORE_PATH/src/modules/Bots/sql/characters/*.sql"
-  for UPDATEFILE in ${CORE_PATH}/src/modules/Bots/sql/characters/*.sql; do
+  for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/characters/*.sql; do
     if [ -e "$UPDATEFILE" ]; then
       echo "  - Applying $UPDATEFILE"
       local fName=$(basename "$UPDATEFILE")
@@ -1466,18 +1466,6 @@ function apply_playerbots_db {
       fi
     fi
   done
-
-  # Seems to crash and be useless
-  # echo "> Apply database merge file for expansion..."
-  # echo "  - Applying ${CORE_PATH}/src/modules/Bots/sql/other/database_merge_${BOT_EXP_PREFIX}.sql"
-  # if [ -e "${CORE_PATH}/src/modules/Bots/sql/other/database_merge_${BOT_EXP_PREFIX}.sql" ]; then
-  #   echo "  - Applying ${CORE_PATH}/src/modules/Bots/sql/other/database_merge_${BOT_EXP_PREFIX}.sql"
-  #   local fName=$(basename "${CORE_PATH}/src/modules/Bots/sql/other/database_merge_${BOT_EXP_PREFIX}.sql")
-  #   if ! execute_sql_file "${CORE_PATH}/src/modules/Bots/sql/other/database_merge_${BOT_EXP_PREFIX}.sql" "  - Applying $fName"; then
-  #     false
-  #     return
-  #   fi
-  # fi
 
   echo
   true
@@ -3051,6 +3039,7 @@ set_sql_queries
 
 # check if user just want fast db installation
 if [[ "$1" = "-InstallAll" ]]; then
+  PLAYERBOTS_DB="YES"
   if ! auto_script_create_all $2 $3 $4; then
     exit 1
   fi

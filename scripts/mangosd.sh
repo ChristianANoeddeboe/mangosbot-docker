@@ -161,12 +161,16 @@ function initialize_database {
 	# Get latest version
 	rm -rf /tmp/cmangos
 	rm -rf /tmp/db
-	echo "Getting latest cmangos core from https://github.com/cmangos/mangos-classic.git ike3-bots..."
-	git clone https://github.com/cmangos/mangos-classic.git /tmp/cmangos
+	echo "Getting latest cmangos core from https://github.com/cmangos/mangos-classic.git"
+	git clone https://github.com/cmangos/mangos-classic.git --branch latest /tmp/cmangos
 	echo "Getting latest playerbots module from https://github.com/cmangos/playerbots.git..."
-	git clone https://github.com/cmangos/playerbots.git /tmp/cmangos/src/modules/Bots
+	git clone https://github.com/cmangos/playerbots.git /tmp/cmangos/src/modules/PlayerBots
 	echo "Getting latest database files from https://github.com/cmangos/classic-db.git..."
 	git clone https://github.com/cmangos/classic-db.git /tmp/db
+	cd /tmp/db
+	# Temporary fix for the latest commit
+	git checkout bf0279ec3317cfa01fe73dfd6666ec90b0bb6542
+	cd /
 
 	# Create default database structures
 	echo "Create base Characters database"
@@ -191,7 +195,7 @@ function initialize_database {
 
 	# Does not work, no folder named playerbot exists anymore
 	echo "Trying to create base Playerbots database"
-	if [ -f /tmp/cmangos/src/modules/Bots/sql/playerbot/playerbot.sql ]; then
+	if [ -f /tmp/cmangos/src/modules/PlayerBots/sql/playerbot/playerbot.sql ]; then
 		echo "Create base Playerbots database"
 		mysql -h "$DB_SERVER" -P "$DB_PORT" -u${DB_ROOT_USER} -p${DB_ROOT_PASS} ${PLAYERBOTS_DB} </tmp/cmangos/src/modules/Bots/sql/playerbot/playerbot.sql
 	fi

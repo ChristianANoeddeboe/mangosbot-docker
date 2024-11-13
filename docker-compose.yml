@@ -19,7 +19,9 @@ services:
       MYSQL_INTERACTIVE_TIMEOUT: 28800
       MYSQL_MAX_ALLOWED_PACKET: 128M
     volumes:
+      - db:/var/lib/mysql
       - "./db:/config"
+      #- "./db:/etc/mysql/conf.d"
     networks:
       - mangosbot-network
     ports:
@@ -46,6 +48,7 @@ services:
     #   dockerfile: ./mangosd/Dockerfile
     #   args:
     #     - BUILD_PLAYERBOT=ON
+    #     - BUILD_AHBOT=ON
     image: angercraft/mangosbot-mangosd
     container_name: cmangos-classic-mangosd
     networks:
