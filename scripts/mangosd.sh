@@ -167,10 +167,6 @@ function initialize_database {
 	git clone https://github.com/cmangos/playerbots.git /tmp/cmangos/src/modules/PlayerBots
 	echo "Getting latest database files from https://github.com/cmangos/classic-db.git..."
 	git clone https://github.com/cmangos/classic-db.git /tmp/db
-	cd /tmp/db
-	# Temporary fix for the latest commit
-	git checkout bf0279ec3317cfa01fe73dfd6666ec90b0bb6542
-	cd /
 
 	# Create default database structures
 	echo "Create base Characters database"
