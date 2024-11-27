@@ -55,7 +55,7 @@ RUN cd /tmp && wget --no-check-certificate https://github.com/Kitware/CMake/rele
 
 # Prepare Sources
 RUN mkdir -p /opt/src && \
-    git clone https://github.com/ChristianANoeddeboe/mangos-classic.git --branch latest /opt/src/cmangos && \
+    git clone https://github.com/ChristianANoeddeboe/mangos-classic.git /opt/src/cmangos && \
     git clone https://github.com/ChristianANoeddeboe/playerbots.git /opt/src/cmangos/src/modules/Bots && \
     echo "Core Version: ${ENV_CORE_COMMIT_HASH}" && \
     if [ "$ENV_CORE_COMMIT_HASH" != "HEAD" ]; then echo "Switching to Commit: ${ENV_CORE_COMMIT_HASH}\n"; cd /opt/src/cmangos; git checkout ${ENV_CORE_COMMIT_HASH}; fi

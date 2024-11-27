@@ -162,7 +162,7 @@ function initialize_database {
 	rm -rf /tmp/cmangos
 	rm -rf /tmp/db
 	echo "Getting latest cmangos core from https://github.com/ChristianANoeddeboe/mangos-classic.git"
-	git clone https://github.com/ChristianANoeddeboe/mangos-classic.git --branch latest /tmp/cmangos
+	git clone https://github.com/ChristianANoeddeboe/mangos-classic.git /tmp/cmangos
 	echo "Getting latest playerbots module from https://github.com/ChristianANoeddeboe/playerbots.git..."
 	git clone https://github.com/ChristianANoeddeboe/playerbots.git /tmp/cmangos/src/modules/PlayerBots
 	echo "Getting latest database files from https://github.com/ChristianANoeddeboe/classic-db.git..."
