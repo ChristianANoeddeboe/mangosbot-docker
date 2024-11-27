@@ -111,16 +111,8 @@ jobs:
           message: |
             🚀 **New Release Build Successful!**
 
-            **Release:** ${{ github.event.release.tag_name || 'manual build' }}
-            **Release Title:** ${{ github.event.release.name || 'Manual Build' }}
-
-            **Images Built:**
-            • MangosD: `${{ env.DOCKERHUB_USERNAME }}/${{ env.MANGOSD_IMAGE_NAME }}:${{ env.VERSION }}`
-            • RealmD: `${{ env.DOCKERHUB_USERNAME }}/${{ env.REALMD_IMAGE_NAME }}:${{ env.VERSION }}`
-
-            **Build Link:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-
   notify-failure:
+    needs: [build-realmd, build-mangosd]
     if: failure()
     runs-on: ubuntu-latest
     steps:
