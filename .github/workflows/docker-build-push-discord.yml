@@ -3,7 +3,6 @@ name: Build and Push MangosBot Images
 on:
   release:
     types: [published]
-  # Keeping workflow_dispatch for manual triggers if needed
   workflow_dispatch:
 
 env:
@@ -11,16 +10,11 @@ env:
   DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
   MANGOSD_IMAGE_NAME: mangosbot-mangosd
   REALMD_IMAGE_NAME: mangosbot-realmd
-  # Get version from release tag or 'latest' for manual runs
   VERSION: ${{ github.event.release.tag_name || 'latest' }}
 
 jobs:
-  build-and-push:
+  setup:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-      packages: write
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -37,15 +31,12 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
-      - name: Extract metadata for MangosD
-        id: meta-mangosd
-        uses: docker/metadata-action@v5
-        with:
-          images: ${{ env.REGISTRY }}/${{ env.DOCKERHUB_USERNAME }}/${{ env.MANGOSD_IMAGE_NAME }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest
+  build-realmd:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
       - name: Extract metadata for RealmD
         id: meta-realmd
@@ -58,7 +49,6 @@ jobs:
             type=raw,value=latest
 
       - name: Build and push RealmD image
-        id: build-realmd
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -69,8 +59,24 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  build-mangosd:
+    needs: setup
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Extract metadata for MangosD
+        id: meta-mangosd
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.DOCKERHUB_USERNAME }}/${{ env.MANGOSD_IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
+
       - name: Build and push MangosD image
-        id: build-mangosd
         uses: docker/build-push-action@v5
         with:
           context: .
@@ -82,8 +88,12 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
+  notify-success:
+    needs: [build-realmd, build-mangosd]
+    if: success()
+    runs-on: ubuntu-latest
+    steps:
       - name: Discord notification - Success
-        if: success()
         uses: appleboy/discord-action@master
         with:
           webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
@@ -102,8 +112,11 @@ jobs:
 
             **Build Link:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
+  notify-failure:
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
       - name: Discord notification - Failure
-        if: failure()
         uses: appleboy/discord-action@master
         with:
           webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
