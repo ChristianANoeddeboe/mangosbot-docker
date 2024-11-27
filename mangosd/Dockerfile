@@ -104,10 +104,10 @@ RUN mkdir -p /opt/cmangos/logs /opt/cmangos/build
 
 RUN cd /opt/cmangos/build && \
     cmake /opt/cmangos -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" \
-    -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" \
-    -DPCH=1 \
+    # -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    # -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" \
+    # -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" \
+    # -DPCH=1 \
     -DDEBUG=0 \
     -DCMAKE_INSTALL_PREFIX=/opt/cmangos \
     -DBUILD_EXTRACTORS=${BUILD_EXTRACTORS} \
