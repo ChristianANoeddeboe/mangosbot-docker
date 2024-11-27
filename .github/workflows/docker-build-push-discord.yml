@@ -14,14 +14,17 @@ env:
 
 jobs:
   setup:
-    name: Setup Environment
     runs-on: ubuntu-latest
-    outputs:
-      mangosd_tags: ${{ steps.meta-mangosd.outputs.tags }}
-      mangosd_labels: ${{ steps.meta-mangosd.outputs.labels }}
-      realmd_tags: ${{ steps.meta-realmd.outputs.tags }}
-      realmd_labels: ${{ steps.meta-realmd.outputs.labels }}
+    steps:
+      - name: Log in to Docker Hub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+  build-realmd:
+    needs: setup
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,16 +34,8 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
-
-      - name: Extract metadata for MangosD
-        id: meta-mangosd
-        uses: docker/metadata-action@v5
         with:
-          images: ${{ env.REGISTRY }}/${{ env.DOCKERHUB_USERNAME }}/${{ env.MANGOSD_IMAGE_NAME }}
-          tags: |
-            type=semver,pattern={{version}}
-            type=semver,pattern={{major}}.{{minor}}
-            type=raw,value=latest
+          driver: docker-container
 
       - name: Extract metadata for RealmD
         id: meta-realmd
@@ -52,44 +47,41 @@ jobs:
             type=semver,pattern={{major}}.{{minor}}
             type=raw,value=latest
 
-  build-realmd:
-    name: Build and Push RealmD Image
-    runs-on: ubuntu-latest
-    needs: setup
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
-
       - name: Build and push RealmD image
         uses: docker/build-push-action@v5
         with:
           context: .
           file: ./realmd/Dockerfile
           push: true
-          tags: ${{ needs.setup.outputs.realmd_tags }}
-          labels: ${{ needs.setup.outputs.realmd_labels }}
+          tags: ${{ steps.meta-realmd.outputs.tags }}
+          labels: ${{ steps.meta-realmd.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
   build-mangosd:
-    name: Build and Push MangosD Image
-    runs-on: ubuntu-latest
     needs: setup
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: Log in to Docker Hub
-        uses: docker/login-action@v3
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          driver: docker-container
+
+      - name: Extract metadata for MangosD
+        id: meta-mangosd
+        uses: docker/metadata-action@v5
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.DOCKERHUB_USERNAME }}/${{ env.MANGOSD_IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=raw,value=latest
 
       - name: Build and push MangosD image
         uses: docker/build-push-action@v5
@@ -98,18 +90,17 @@ jobs:
           file: ./mangosd/Dockerfile
           build-args: BUILD_PLAYERBOT=ON BUILD_AHBOT=ON
           push: true
-          tags: ${{ needs.setup.outputs.mangosd_tags }}
-          labels: ${{ needs.setup.outputs.mangosd_labels }}
+          tags: ${{ steps.meta-mangosd.outputs.tags }}
+          labels: ${{ steps.meta-mangosd.outputs.labels }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-  notify:
-    name: Notify Discord
-    runs-on: ubuntu-latest
+  notify-success:
     needs: [build-realmd, build-mangosd]
+    if: success()
+    runs-on: ubuntu-latest
     steps:
       - name: Discord notification - Success
-        if: success()
         uses: appleboy/discord-action@master
         with:
           webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
@@ -128,8 +119,11 @@ jobs:
 
             **Build Link:** ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
 
+  notify-failure:
+    if: failure()
+    runs-on: ubuntu-latest
+    steps:
       - name: Discord notification - Failure
-        if: failure()
         uses: appleboy/discord-action@master
         with:
           webhook_id: ${{ secrets.DISCORD_WEBHOOK_ID }}
