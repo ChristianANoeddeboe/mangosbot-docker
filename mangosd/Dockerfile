@@ -106,10 +106,10 @@ RUN cd /opt/cmangos/build && \
     cmake /opt/cmangos \
     -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
     -DCMAKE_VERBOSE_MAKEFILE=ON \
-    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" \
-    -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" \
-    # -DCMAKE_BUILD_TYPE=Release \
+    # -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    # -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" \
+    # -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" \
+    -DCMAKE_BUILD_TYPE=Release \
     # -DPCH=1 \
     -DDEBUG=0 \
     -DCMAKE_INSTALL_PREFIX=/opt/cmangos \
