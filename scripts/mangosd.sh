@@ -190,11 +190,11 @@ function initialize_database {
 	fi
 
 	# Does not work, no folder named playerbot exists anymore
-	echo "Trying to create base Playerbots database"
-	if [ -f /tmp/cmangos/src/modules/PlayerBots/sql/playerbot/playerbot.sql ]; then
-		echo "Create base Playerbots database"
-		mysql -h "$DB_SERVER" -P "$DB_PORT" -u${DB_ROOT_USER} -p${DB_ROOT_PASS} ${PLAYERBOTS_DB} </tmp/cmangos/src/modules/Bots/sql/playerbot/playerbot.sql
-	fi
+	# echo "Trying to create base Playerbots database"
+	# if [ -f /tmp/cmangos/src/modules/PlayerBots/sql/playerbot/playerbot.sql ]; then
+	# 	echo "Create base Playerbots database"
+	# 	mysql -h "$DB_SERVER" -P "$DB_PORT" -u${DB_ROOT_USER} -p${DB_ROOT_PASS} ${PLAYERBOTS_DB} </tmp/cmangos/src/modules/Bots/sql/playerbot/playerbot.sql
+	# fi
 
 	# Copy install script
 	cp -v /opt/cmangos/etc/InstallFullDB.config /tmp/db/InstallFullDB.config

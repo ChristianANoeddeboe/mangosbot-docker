@@ -92,7 +92,7 @@ RUN echo "ENV_CORE_COMMIT_HASH=$ENV_CORE_COMMIT_HASH" && \
 # Prepare Sources
 RUN mkdir -p /opt/cmangos && \
     git clone https://github.com/ChristianANoeddeboe/mangos-classic.git /opt/cmangos && \
-    git clone https://github.com/ChristianANoeddeboe/playerbots.git /opt/cmangos/src/modules/Bots && \
+    git clone https://github.com/ChristianANoeddeboe/playerbots.git /opt/cmangos/src/modules/PlayerBots && \
     echo "Core Version: ${ENV_CORE_COMMIT_HASH}" && \
     if [ "$ENV_CORE_COMMIT_HASH" != "HEAD" ]; then echo "Switching to Commit: ${ENV_CORE_COMMIT_HASH}\n"; cd /opt/cmangos; git checkout ${ENV_CORE_COMMIT_HASH}; fi
 
@@ -103,10 +103,13 @@ RUN echo "Final CMAKE_FLAGS before build: $CMAKE_FLAGS"
 RUN mkdir -p /opt/cmangos/logs /opt/cmangos/build
 
 RUN cd /opt/cmangos/build && \
-    cmake /opt/cmangos -DCMAKE_BUILD_TYPE=Release \
-    # -DCMAKE_BUILD_TYPE=RelWithDebInfo \
-    # -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" \
-    # -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" \
+    cmake /opt/cmangos \
+    -DCMAKE_EXPORT_COMPILE_COMMANDS=ON \
+    -DCMAKE_VERBOSE_MAKEFILE=ON \
+    -DCMAKE_BUILD_TYPE=RelWithDebInfo \
+    -DCMAKE_C_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" \
+    -DCMAKE_CXX_FLAGS="-Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value -O0 -g" \
+    # -DCMAKE_BUILD_TYPE=Release \
     # -DPCH=1 \
     -DDEBUG=0 \
     -DCMAKE_INSTALL_PREFIX=/opt/cmangos \
@@ -123,12 +126,12 @@ RUN cd /opt/cmangos/build && \
 # Release with Debug info build
 # Memory leak debugger build
 #cmake .. -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_C_FLAGS="-fsanitize=address,leak -fsanitize-recover=address -O0 -g -Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" -DCMAKE_CXX_FLAGS="-fsanitize=address,leak -fsanitize-recover=address -O0 -g -Wno-switch -Wno-format -Wno-format-security -Wno-format-extra-args -Wno-unused-value" -DCMAKE_MODULE_LINKER_FLAGS="-fsanitize=address,leak" -DCMAKE_C_COMPILER=clang -DCMAKE_CXX_COMPILER=clang++ -DCMAKE_INSTALL_PREFIX=/opt/cmangos -DBUILD_LOGIN_SERVER=OFF -DBUILD_GAME_SERVER=ON -DBUILD_ACHIEVEMENTS=ON -DBUILD_AHBOT=ON -DBUILD_GIT_ID=OFF -DBUILD_IKE3_BOTS=ON -DBUILD_PLAYERBOT=ON -DBUILD_SCRIPTDEV=ON -DPCH=ON && \
-RUN cd /opt/cmangos/build && make -j$(nproc) && make install
+RUN cd /opt/cmangos/build && make VERBOSE=1 -j$(nproc) && make install
 
 # Save current repository version used into a file
 RUN cd /opt/cmangos && \
     git rev-parse HEAD > /opt/cmangos/bin/core_version.txt && \
-    cd /opt/cmangos/src/modules/Bots && \
+    cd /opt/cmangos/src/modules/PlayerBots && \
     git rev-parse HEAD > /opt/cmangos/bin/mangosbot_version.txt
 
 # Download base image ubuntu

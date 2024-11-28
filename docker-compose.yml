@@ -3,6 +3,7 @@ volumes:
   mangosd_etc:
   realmd_etc:
 
+
 services:
   db:
     image: linuxserver/mariadb:latest
@@ -28,7 +29,7 @@ services:
       - 33307:3306
     restart: unless-stopped
     healthcheck:
-      test: 
+      test:
         - "CMD"
         - "/usr/bin/mysqladmin"
         - "ping"
@@ -41,7 +42,7 @@ services:
       timeout: 30s
       retries: 3
       start_period: 60s
-        
+
   mangosd:
     # build:
     #   context: .
@@ -49,6 +50,7 @@ services:
     #   args:
     #     - BUILD_PLAYERBOT=ON
     #     - BUILD_AHBOT=ON
+    #     - BUILD_EXTRACTORS=ON
     image: angercraft/mangosbot-mangosd
     container_name: cmangos-classic-mangosd
     networks:

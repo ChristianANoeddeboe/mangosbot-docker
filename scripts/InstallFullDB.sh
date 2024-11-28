@@ -1442,7 +1442,7 @@ function apply_playerbots_db {
   done
 
   echo "> Trying to apply playerbots sql mods for world db (expansion specific)..."
-  echo "  - Applying $CORE_PATH/src/modules/Bots/sql/world/${BOT_EXP_PREFIX}/*.sql"
+  echo "  - Applying $CORE_PATH/src/modules/PlayerBots/sql/world/${BOT_EXP_PREFIX}/*.sql"
   for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/world/${BOT_EXP_PREFIX}/*.sql; do
     if [ -e "$UPDATEFILE" ]; then
       echo "  - Applying $UPDATEFILE"
@@ -1455,7 +1455,7 @@ function apply_playerbots_db {
   done
 
   echo "> Trying to apply playerbots sql mods for characters db..."
-  echo "  - Applying $CORE_PATH/src/modules/Bots/sql/characters/*.sql"
+  echo "  - Applying $CORE_PATH/src/modules/PlayerBots/sql/characters/*.sql"
   for UPDATEFILE in ${CORE_PATH}/src/modules/PlayerBots/sql/characters/*.sql; do
     if [ -e "$UPDATEFILE" ]; then
       echo "  - Applying $UPDATEFILE"
