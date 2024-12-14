@@ -59,19 +59,19 @@ jobs:
 
       - name: Build and push RealmD image
         id: build-realmd
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./realmd/Dockerfile
           push: true
           tags: ${{ steps.meta-realmd.outputs.tags }}
           labels: ${{ steps.meta-realmd.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=user/app:latest
+          cache-to: type=inline
 
       - name: Build and push MangosD image
         id: build-mangosd
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v6
         with:
           context: .
           file: ./mangosd/Dockerfile
@@ -79,8 +79,8 @@ jobs:
           push: true
           tags: ${{ steps.meta-mangosd.outputs.tags }}
           labels: ${{ steps.meta-mangosd.outputs.labels }}
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=registry,ref=user/app:latest
+          cache-to: type=inline
 
   notify-success:
     needs: build-and-push
