@@ -7,7 +7,7 @@ volumes:
 services:
   db:
     image: linuxserver/mariadb:latest
-    container_name: cmangos-db
+    container_name: wow-cmangos-db
     environment:
       TZ: Europe/London
       MYSQL_ROOT_PASSWORD: mangos
@@ -78,7 +78,7 @@ services:
       MANGOSD_DB: classicmangos
       REALMD_DB: classicrealmd
       PLAYERBOTS_DB: classicplayerbots
-      DB_SERVER: cmangos-db
+      DB_SERVER: wow-cmangos-db
       DB_ROOT_USER: root
       DB_ROOT_PASS: mangos
       DB_PORT: 3306
@@ -116,7 +116,7 @@ services:
       REALMD_DB: classicrealmd
       DB_USER: mangos
       DB_PASS: mangos
-      DB_SERVER: cmangos-db
+      DB_SERVER: wow-cmangos-db
       DB_PORT: 3306
 
 networks:
