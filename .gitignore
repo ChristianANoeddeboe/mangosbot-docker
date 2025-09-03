@@ -2,4 +2,4 @@ config/.intialized
 db/
 config/.initialized
 data/
-config/aiplayerbot.conf
+config/.manual_stop
